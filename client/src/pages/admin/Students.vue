@@ -19,7 +19,7 @@
       </button>
     </div>
     <Table
-      :data="students"
+      :data="dataSend"
       :labels="labels"
       :other-component="true"
       @open="handleChildClique"
@@ -40,45 +40,66 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import user1 from "../../../public/R.jpg";
-import user2 from "../../../public/blue-icon-13470.jpg";
+import { computed, onMounted, ref } from "vue";
 import Table from "@/components/Table.vue";
 import DrawerAdd from "@/components/DrawerAdd.vue";
 import UpdateStudent from "@/components/UpdateStudent.vue";
 import ViewStudent from "@/components/ViewStudent.vue";
+import useStudentStore from "@/stores/studentStore";
+import { storeToRefs } from "pinia";
+import { useFacultyStore } from "@/stores/facultyStore";
+import usePromotionStore from "@/stores/promotionStore";
+import useUserStore from "@/stores/userstore";
+import useDepartementStore from "@/stores/departementStore";
+
+const studentStore = useStudentStore();
+const facultyStore = useFacultyStore();
+const promotionStore = usePromotionStore();
+const userStore = useUserStore();
+const departementStore = useDepartementStore();
+
+const { students } = storeToRefs(studentStore);
+const { faculties } = storeToRefs(facultyStore);
+const { promotions } = storeToRefs(promotionStore);
+const { users } = storeToRefs(userStore);
+const { departements } = storeToRefs(departementStore);
+
+const { fetchAll: fetchAllFaculties } = facultyStore;
+const { fetchPromotions } = promotionStore;
+const { fetchUsers } = userStore;
+const { fetchAllStudents } = studentStore;
+const { fetchDepartements } = departementStore;
 
 const show = ref(false);
 const handleClick = () => {
   show.value = true;
 };
 
-const students = ref([
-  {
-    id: 1,
-    img: user1,
-    name: "Bienfait Mbilizi Portace",
-    date: "No",
-    email: "Bienfaitmbilizi65@gmail.com",
-    matricule: "MAT765",
-    faculty: "Science",
-    departement: "Informatique",
-    gender: "Masculin",
-    promotion: "BAC 1",
-  },
-  {
-    id: 2,
-    img: user2,
-    name: "Louise Bessana",
-    date: "No",
-    email: "louise@gmail.com",
-    matricule: "MAT765",
-    faculty: "Science",
-    departement: "Environnement",
-    gender: "Feminin",
-    promotion: "BAC 2",
-  },
-]);
+const dataSend = computed(() => {
+  if (!students.value || !users.value || !promotions.value || !departements.value || !faculties.value) {
+    return [];
+  }
+
+  return students.value.map((item) => {
+    const user = users.value.find((u) => u.id === item.id_utilisateur);
+    const promotion = promotions.value.find((p) => p.id === item.id_promotion);
+    const departement = promotion ? departements.value.find((d) => d.id === promotion.id_departement) : null;
+    const faculty = departement ? faculties.value.find((f) => f.id === departement.id_faculte) : null;
+
+    return {
+      id: item.id,
+      img:item.photo_url,
+      name: item.nom,
+      date: item.anniv ? new Date(item.anniv).toLocaleDateString("fr-FR") : "",
+      email: user?.email || "",
+      matricule: user?.password || "",
+      faculty: faculty?.nom_faculte || "",
+      departement: departement?.nom_departement || "",
+      gender: item.genre,
+      promotion: promotion?.nom_promotion || "",
+    };
+  });
+});
 
 const labels = ref([
   "Name",
@@ -104,4 +125,12 @@ const handleView = (data) => {
   view.value = true;
   viewData.value = data;
 };
+
+onMounted(async () => {
+  await fetchAllFaculties();
+  await fetchPromotions();
+  await fetchUsers();
+  await fetchDepartements();
+  await fetchAllStudents();
+});
 </script>

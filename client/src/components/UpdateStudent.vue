@@ -1,151 +1,205 @@
 <template>
   <div class="drawer drawer-end">
-    <!-- toggle synchronisé -->
     <input id="drawer-update" type="checkbox" class="drawer-toggle" v-model="isOpen" />
-
     <div class="drawer-content">
       <slot name="content" />
     </div>
-
     <div class="drawer-side z-50">
-      <!-- overlay -->
       <label for="drawer-update" aria-label="close sidebar" class="drawer-overlay"></label>
-
-      <div class="p-6 w-[75%] h-auto lg:h-screen bg-base-200 flex flex-col">
-        <!-- header -->
-        <div class="flex items-center justify-between pb-4 border-b border-gray-200">
-          <h2 class="text-2xl font-extrabold text-blue-400">{{ props.title }}</h2>
-          <button @click="closeDrawer" class="btn btn-sm btn-ghost p-2 rounded-full">✕</button>
+      <div
+        class="p-8 w-[95%] sm:w-[80%] md:w-[60%] lg:w-[75%] h-full bg-base-100 text-base flex flex-col shadow-xl"
+      >
+        <div class="flex items-center justify-between pb-4 border-b border-base-300">
+          <h2 class="text-2xl font-bold">{{ props.title }}</h2>
+          <button @click="closeDrawer" class="btn btn-sm btn-ghost">
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
+          </button>
         </div>
-
-        <!-- form -->
-        <div class="w-full p-6 mt-5" v-if="props.data">
-          <h1 class="text-3xl font-extrabold text-center mb-5">Update Form</h1>
-          <div class="flex flex-col lg:flex-row lg:space-x-12">
-            <div class="flex-grow">
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div>
-                  <label for="first_name" class="block text-sm font-semibold">Fullname</label>
+        <div class="w-full flex-grow overflow-y-auto">
+          <div class="py-6">
+            <h1 class="text-3xl font-extrabold text-center mb-6 text-primary">Update Student</h1>
+            <form @submit.prevent="handleSubmit" class="space-y-6">
+              <div class="flex flex-col items-center">
+                <div
+                  class="relative w-40 h-40 mb-4 rounded-full overflow-hidden border-2 border-base-300"
+                >
+                  <img
+                    v-if="photoPreview"
+                    :src="photoPreview"
+                    alt="Photo de profil"
+                    class="w-full h-full object-cover"
+                  />
+                  <div v-else class="w-full h-full flex items-center justify-center bg-base-200">
+                    <span>No Photo</span>
+                  </div>
+                </div>
+                <input type="file" id="file_upload" @change="handleFileChange" accept="image/*" />
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                <div class="form-control">
+                  <label for="fullname" class="label">
+                    <span class="label-text font-medium">Fullname</span>
+                  </label>
                   <input
                     type="text"
-                    id="first_name"
-                    :value="props.data.name"
-                    placeholder="Enter the first name"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                    id="fullname"
+                    v-model="formData.fullname"
+                    placeholder="Enter the full name"
+                    class="input input-bordered w-full"
                   />
                 </div>
-                <div>
-                  <label for="date_of_birth" class="block text-sm font-semibold">Date</label>
+                <div class="form-control">
+                  <label for="date_of_birth" class="label">
+                    <span class="label-text font-medium">Date</span>
+                  </label>
                   <input
                     type="date"
                     id="date_of_birth"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                    v-model="formData.date"
+                    class="input input-bordered w-full"
                   />
                 </div>
-                <div>
-                  <label for="email" class="block text-sm font-semibold">Email</label>
+                <div class="form-control">
+                  <label for="email" class="label">
+                    <span class="label-text font-medium">Email</span>
+                  </label>
                   <input
                     type="email"
-                    :value="props.data.email"
                     id="email"
+                    v-model="formData.email"
                     placeholder="ex@gmail.com"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                    class="input input-bordered w-full"
                   />
                 </div>
-                <div>
-                  <label for="matricule" class="block text-sm font-semibold">Matricule</label>
+                <div class="form-control">
+                  <label for="matricule" class="label">
+                    <span class="label-text font-medium">Matricule</span>
+                  </label>
                   <input
                     type="text"
                     id="matricule"
-                    :value="props.data.matricule"
+                    v-model="formData.matricule"
                     placeholder="Enter the matricule"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                    class="input input-bordered w-full"
                   />
                 </div>
-                <div>
-                  <label for="faculty" class="block text-sm font-semibold">Faculty</label>
+
+                <div class="form-control">
+                  <label for="faculty" class="label">
+                    <span class="label-text font-medium">Faculty</span>
+                  </label>
                   <select
                     id="faculty"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                    v-model="facultyChoosed"
+                    class="select select-bordered w-full"
                   >
-                    <option disabled selected>Choose a faculty</option>
-                    <option>Crimson</option>
-                    <option>Amber</option>
-                    <option>Velvet</option>
+                    <option disabled selected value="">Choose a faculty</option>
+                    <template v-if="selectFaculties.length > 0">
+                      <option
+                        v-for="faculty in selectFaculties"
+                        :key="faculty.value"
+                        :value="faculty.value"
+                      >
+                        {{ faculty.label }}
+                      </option>
+                    </template>
+                    <option v-else disabled>No Faculties available</option>
                   </select>
                 </div>
-                <div>
-                  <label for="promotion" class="block text-sm font-semibold">Promotion</label>
+
+                <div class="form-control">
+                  <label for="department" class="label">
+                    <span class="label-text font-medium">Department</span>
+                  </label>
+                  <select
+                    id="department"
+                    v-model="departementChoosed"
+                    class="select select-bordered w-full"
+                  >
+                    <option v-if="!facultyChoosed" disabled selected value="">
+                      Choose a faculty first
+                    </option>
+                    <option v-if="facultyChoosed" disabled selected value="">
+                      Choose a department
+                    </option>
+                    <template v-if="facultyChoosed && selectDepartement.length > 0">
+                      <option v-for="dep in selectDepartement" :key="dep.value" :value="dep.value">
+                        {{ dep.label }}
+                      </option>
+                    </template>
+                    <option v-else-if="facultyChoosed" disabled>No departments available</option>
+                  </select>
+                </div>
+
+                <div class="form-control">
+                  <label for="promotion" class="label">
+                    <span class="label-text font-medium">Promotion</span>
+                  </label>
                   <select
                     id="promotion"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                    v-model="promotionChoosed"
+                    class="select select-bordered w-full"
                   >
-                    <option disabled selected>Choose a promotion</option>
-                    <option>Crimson</option>
-                    <option>Amber</option>
-                    <option>Velvet</option>
+                    <option v-if="!departementChoosed" disabled selected value="">
+                      Choose a department first
+                    </option>
+                    <option v-if="departementChoosed" disabled selected value="">
+                      Choose a promotion
+                    </option>
+                    <template v-if="departementChoosed && selectPromotion.length > 0">
+                      <option v-for="prom in selectPromotion" :key="prom.value" :value="prom.value">
+                        {{ prom.label }}
+                      </option>
+                    </template>
+                    <option v-else-if="departementChoosed" disabled>No promotions available</option>
                   </select>
                 </div>
-                <div>
-                  <label for="department" class="block text-sm font-semibold">Department</label>
-                  <select
-                    id="department"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                  >
-                    <option disabled selected>Choose a department</option>
-                    <option>Crimson</option>
-                    <option>Amber</option>
-                    <option>Velvet</option>
+
+                <div class="form-control">
+                  <label for="role" class="label">
+                    <span class="label-text font-medium">Role</span>
+                  </label>
+                  <select id="role" v-model="formData.role" class="select select-bordered w-full">
+                    <option disabled value="">Choose a role</option>
+                    <option value="Student">Student</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Professor">Professor</option>
                   </select>
                 </div>
-                <div>
-                  <label for="role" class="block text-sm font-semibold">Role</label>
-                  <select
-                    id="department"
-                    class="mt-1 block w-full bg-base-100 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                  >
-                    <option disabled selected>Choose a role</option>
-                    <option>Students</option>
-                    <option>Admin</option>
-                  </select>
-                </div>
-                <div>
-                  <label for="gender" class="block text-sm font-semibold">Gender</label>
+                <div class="form-control">
+                  <label for="gender" class="label">
+                    <span class="label-text font-medium">Gender</span>
+                  </label>
                   <select
                     id="gender"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                    v-model="formData.gender"
+                    class="select select-bordered w-full"
                   >
-                    <option disabled selected>Choose a gender</option>
-                    <option>Man</option>
-                    <option>Woman</option>
-                    <option>Private</option>
+                    <option disabled value="">Choose a gender</option>
+                    <option value="Man">Man</option>
+                    <option value="Woman">Woman</option>
+                    <option value="Private">Private</option>
                   </select>
                 </div>
               </div>
-            </div>
-            <div
-              class="mt-10 lg:mt-0 flex flex-col items-center justify-center p-6 bg-base-100 rounded-md lg:w-1/3"
-            >
-              <label for="file_upload" class="flex flex-col items-center cursor-pointer">
-                <svg class="h-20 w-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                  />
-                </svg>
-                <span class="mt-2 text-sm font-medium">Upload a picture</span>
-              </label>
-              <input type="file" id="file_upload" class="hidden" />
-            </div>
+              <div class="mt-8">
+                <button type="submit" class="btn btn-primary w-full">Submit</button>
+              </div>
+            </form>
           </div>
-          <button
-            type="submit"
-            class="mt-10 w-full px-6 py-3 cursor-pointer bg-indigo-600 font-semibold rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-          >
-            Update
-          </button>
         </div>
       </div>
     </div>
@@ -153,7 +207,14 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import { storeToRefs } from "pinia";
+import useUserStore from "@/stores/userstore";
+import { errorNotification } from "../../helpers";
+import useStudentStore from "@/stores/studentStore";
+import { useFacultyStore } from "@/stores/facultyStore";
+import usePromotionStore from "@/stores/promotionStore";
+import useDepartementStore from "@/stores/departementStore";
 
 const props = defineProps({
   modelValue: {
@@ -165,16 +226,96 @@ const props = defineProps({
     default: "Title",
   },
   data: {
-    type: Object, // ⚠️ c'était Array, mais en fait c’est un objet étudiant
+    type: Object,
     required: true,
   },
 });
 
 const emit = defineEmits(["update:modelValue"]);
-
 const isOpen = ref(props.modelValue);
 
-// synchro props <-> état interne
+// Stores
+const userStore = useUserStore();
+const studentStore = useStudentStore();
+const facultyStore = useFacultyStore();
+const promotionStore = usePromotionStore();
+const departementStore = useDepartementStore();
+
+// Store states
+const { users } = storeToRefs(userStore);
+const { students } = storeToRefs(studentStore);
+const { faculties } = storeToRefs(facultyStore);
+const { promotions } = storeToRefs(promotionStore);
+const { departements } = storeToRefs(departementStore);
+
+// Store actions
+const { fetchUsers } = userStore;
+const { fetchAll: fetchAllFaculties } = facultyStore;
+const { fetchPromotions } = promotionStore;
+const { fetchAllStudents, updateStudent } = studentStore;
+const { fetchDepartements } = departementStore;
+
+const formData = ref({
+  id: null, // User ID
+  id_student: null,
+  fullname: "",
+  date: "",
+  email: "",
+  matricule: "",
+  role: "",
+  gender: "",
+  promotion: null,
+  photo: null,
+});
+
+const facultyChoosed = ref(null);
+const departementChoosed = ref(null);
+const promotionChoosed = ref(null);
+
+const newPhotoFile = ref(null);
+const photoPreview = ref(null);
+
+watch(
+  () => props.data,
+  (newData) => {
+    if (newData) {
+      // Find the full student data from the store
+      const student = students.value.find((s) => s.id === newData.id);
+      if (!student) {
+        console.error("Student not found in store for update:", newData.id);
+        return;
+      }
+      const user = users.value.find((u) => u.id === student.id_utilisateur);
+      const promotion = promotions.value.find((p) => p.id === student.id_promotion);
+      const departement = promotion ? departements.value.find((d) => d.id === promotion.id_departement) : null;
+      const faculty = departement ? faculties.value.find((f) => f.id === departement.id_faculte) : null;
+
+      // Fill form data
+      formData.value = {
+        id: user?.id || null,
+        id_student: student?.id || null,
+        fullname: newData.name,
+        date: newData.date ? newData.date.split("/").reverse().join("-") : "",
+        email: newData.email,
+        matricule: newData.matricule,
+        role: user?.role || "",
+        gender: newData.gender,
+        promotion: promotion?.id || null,
+        photo: student?.photo_url || null,
+      };
+
+      // Set the values for the select inputs
+      facultyChoosed.value = faculty?.id || null;
+      departementChoosed.value = departement?.id || null;
+      promotionChoosed.value = promotion?.id || null;
+
+      // Configure photo preview
+      photoPreview.value = student?.photo_url ? `http://localhost:4000/${student.photo_url}` : null;
+    }
+  },
+  { immediate: true }
+);
+
 watch(isOpen, (val) => emit("update:modelValue", val));
 watch(
   () => props.modelValue,
@@ -184,4 +325,103 @@ watch(
 const closeDrawer = () => {
   isOpen.value = false;
 };
+
+// Cascading select logic
+watch(facultyChoosed, (newVal) => {
+  if (newVal) {
+    departementChoosed.value = null;
+    promotionChoosed.value = null;
+  }
+});
+
+watch(departementChoosed, (newVal) => {
+  if (newVal) {
+    promotionChoosed.value = null;
+  }
+});
+
+watch(promotionChoosed, (newProm) => {
+  formData.value.promotion = newProm;
+});
+
+const handleFileChange = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    newPhotoFile.value = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      photoPreview.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  } else {
+    newPhotoFile.value = null;
+    photoPreview.value = formData.value.photo
+      ? `http://localhost:4000/${formData.value.photo}`
+      : null;
+  }
+};
+
+const handleSubmit = async () => {
+  const dataToSend = {
+    ...formData.value,
+    photo: newPhotoFile.value ? newPhotoFile.value : formData.value.photo,
+  };
+
+  try {
+    await updateStudent(formData.value.id, dataToSend);
+    await Promise.all([
+      fetchAllStudents(),
+      fetchUsers(),
+      fetchPromotions(),
+      fetchAllFaculties(),
+      fetchDepartements(),
+    ]);
+    closeDrawer();
+  } catch (error) {
+    errorNotification(error);
+  }
+};
+
+onMounted(async () => {
+  // Fetch all necessary data when the component is mounted
+  await Promise.all([
+    fetchAllStudents(),
+    fetchUsers(),
+    fetchPromotions(),
+    fetchAllFaculties(),
+    fetchDepartements(),
+  ]);
+});
+
+// Computed properties for select options
+const selectFaculties = computed(() => {
+  return faculties.value.map((item) => ({
+    value: item.id,
+    label: item.nom_faculte.toUpperCase(),
+  }));
+});
+
+const selectDepartement = computed(() => {
+  if (facultyChoosed.value) {
+    return departements.value
+      .filter((dep) => dep.id_faculte === facultyChoosed.value)
+      .map((item) => ({
+        value: item.id,
+        label: item.nom_departement.toUpperCase(),
+      }));
+  }
+  return [];
+});
+
+const selectPromotion = computed(() => {
+  if (departementChoosed.value) {
+    return promotions.value
+      .filter((prom) => prom.id_departement === departementChoosed.value)
+      .map((item) => ({
+        value: item.id,
+        label: item.nom_promotion,
+      }));
+  }
+  return [];
+});
 </script>

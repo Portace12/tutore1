@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col flex-1 bg-base-200 p-2 sm:p-3 rounded-xl">
-    <AdminNavbar class="mb-8"/>
+    <AdminNavbar class="mb-8" />
     <TransitionGroup
       name="fade-slide-up"
       tag="div"
@@ -46,28 +46,31 @@
 </template>
 
 <script setup>
-import AdminNavbar from './AdminNavbar.vue';
-import AllExamChart from './AllExamChart.vue';
-import ExamResultsNotifications from './ExamResultsNotifications.vue';
-import StatsCard from './StatsCard.vue';
-import StudentRadialChart from './StudentRadialChart.vue';
-import Calendar from './Calendar.vue';
-import useProfessorStore from '@/stores/professorStore';
-import { storeToRefs } from 'pinia';
-import { useFacultyStore } from '@/stores/facultyStore';
-import { onMounted } from 'vue';
-
+import AdminNavbar from "./AdminNavbar.vue";
+import AllExamChart from "./AllExamChart.vue";
+import ExamResultsNotifications from "./ExamResultsNotifications.vue";
+import StatsCard from "./StatsCard.vue";
+import StudentRadialChart from "./StudentRadialChart.vue";
+import Calendar from "./Calendar.vue";
+import useProfessorStore from "@/stores/professorStore";
+import { storeToRefs } from "pinia";
+import { useFacultyStore } from "@/stores/facultyStore";
+import { onMounted } from "vue";
+import useStudentStore from "@/stores/studentStore";
 
 const useProfessor = useProfessorStore();
 const { professors } = storeToRefs(useProfessor);
 const useFaculty = useFacultyStore();
 const { faculties } = storeToRefs(useFaculty);
+const useStudent = useStudentStore();
+const { students } = storeToRefs(useStudent);
+const { fetchAllStudents } = useStudent;
 // Ajout des données de cartes de statistiques pour utiliser v-for
 const statsCards = [
   {
     title: "Students",
     icon: "mdi-account-group",
-    value: "15.00K",
+    value: students.value.length,
     color: "bg-purple-50",
     class: "bg-purple-300 hover:bg-purple-400",
   },
@@ -93,6 +96,9 @@ const statsCards = [
     class: "bg-green-300 hover:bg-green-400",
   },
 ];
+onMounted(async () => {
+  await fetchAllStudents;
+});
 </script>
 
 <style>

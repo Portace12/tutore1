@@ -39,7 +39,6 @@
           <div class="py-6">
             <h1 class="text-3xl font-extrabold text-center mb-6 text-primary">Registration Form</h1>
             <form @submit.prevent="handleSubmit" class="space-y-6">
-              <!-- Photo Upload Section -->
               <div class="flex flex-col items-center">
                 <div
                   class="relative w-40 h-40 mb-4 rounded-full overflow-hidden border-2 border-base-300"
@@ -74,7 +73,6 @@
                 />
               </div>
 
-              <!-- Form Fields -->
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                 <div class="form-control">
                   <label for="first_name" class="label">
@@ -242,6 +240,7 @@ import { storeToRefs } from "pinia";
 import { defineProps, defineEmits, computed, onMounted, ref, watch } from "vue";
 import { errorNotification } from "../../helpers";
 import useStudentStore from "@/stores/studentStore";
+
 const usePromotion = usePromotionStore();
 const useFaculty = useFacultyStore();
 const useDepartement = useDepartementStore();
@@ -252,9 +251,10 @@ const { faculties } = storeToRefs(useFaculty);
 const { departements } = storeToRefs(useDepartement);
 const { createStudent } = useStudent;
 
-const { fetchAll } = useFaculty;
+const { fetchAll: fetchAllFaculties } = useFaculty;
 const { fetchDepartements } = useDepartement;
 const { fetchPromotions } = usePromotion;
+
 const props = defineProps({
   modelValue: {
     type: Boolean,
@@ -267,9 +267,40 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(["update:modelValue"]);
+
+const onToggle = () => {
+  emit("update:modelValue", !props.modelValue);
+};
+
+const initialFormData = {
+  fullname: "",
+  date: "",
+  email: "",
+  matricule: "",
+  role: "",
+  gender: "",
+  promotion: null,
+  photo: null,
+};
+
+const formData = ref({ ...initialFormData });
+const photoPreview = ref(null);
 const facultyChoosed = ref(null);
 const departementChoosed = ref(null);
 const promotionChoosed = ref(null);
+
+const handleFileChange = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    formData.value.photo = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      photoPreview.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+};
 
 const selectFaculties = computed(() => {
   return faculties.value.map((item) => ({
@@ -278,12 +309,17 @@ const selectFaculties = computed(() => {
   }));
 });
 
-watch(facultyChoosed, (newSelection) => {
-  facultyChoosed.value = newSelection;
+watch(facultyChoosed, (newVal) => {
+  if (!newVal) {
+    departementChoosed.value = null;
+    promotionChoosed.value = null;
+  }
 });
 
-watch(departementChoosed, (newSelection) => {
-  departementChoosed.value = newSelection;
+watch(departementChoosed, (newVal) => {
+  if (!newVal) {
+    promotionChoosed.value = null;
+  }
 });
 
 const selectDepartement = computed(() => {
@@ -295,10 +331,11 @@ const selectDepartement = computed(() => {
         label: item.nom_departement.toUpperCase(),
       }));
   }
+  return [];
 });
 
 const selectPromotion = computed(() => {
-  if (departementChoosed.value && facultyChoosed.value) {
+  if (departementChoosed.value) {
     return promotions.value
       .filter((prom) => prom.id_departement === departementChoosed.value)
       .map((item) => ({
@@ -306,41 +343,20 @@ const selectPromotion = computed(() => {
         label: item.nom_promotion,
       }));
   }
+  return [];
 });
-
-const emit = defineEmits(["update:modelValue"]);
-
-const onToggle = () => {
-  emit("update:modelValue", !props.modelValue);
-};
-
-const formData = ref({
-  fullname: "",
-  date: "",
-  email: "",
-  matricule: "",
-  role: "",
-  gender: "",
-  promotion: null,
-  photo: null,
-});
-const photoPreview = ref(null);
-const handleFileChange = (event) => {
-  const file = event.target.files[0];
-  if (file) {
-    formData.value.photo = file;
-    // Création d'une URL de données pour la prévisualisation
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      photoPreview.value = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-};
 
 watch(promotionChoosed, (newProm) => {
   formData.value.promotion = newProm;
 });
+
+const resetForm = () => {
+  Object.assign(formData.value, initialFormData);
+  photoPreview.value = null;
+  facultyChoosed.value = null;
+  departementChoosed.value = null;
+  promotionChoosed.value = null;
+};
 
 const handleSubmit = async () => {
   if (
@@ -355,27 +371,21 @@ const handleSubmit = async () => {
     errorNotification("Please fill all fields");
     return;
   }
-  console.log(formData.value);
 
-  await createStudent(formData.value);
-  formData.value = {
-    fullname: "",
-    date: "",
-    email: "",
-    matricule: "",
-    role: "",
-    gender: "",
-    photo: null,
-  };
-  photoPreview = null;
-  facultyChoosed = null;
-  departementChoosed = null;
-  promotionChoosed = null;
-  onToggle();
+  try {
+    await createStudent(formData.value);
+    // ** Correction: Après une soumission réussie **
+    resetForm();
+    onToggle(); // Ferme le tiroir
+  } catch (error) {
+    console.error("Error during student creation:", error);
+    // Gérer l'erreur, par exemple, en affichant une notification d'erreur
+    errorNotification("Failed to create student. Please try again.");
+  }
 };
 
 onMounted(async () => {
-  await fetchAll();
+  await fetchAllFaculties();
   await fetchDepartements();
   await fetchPromotions();
 });
