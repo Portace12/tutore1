@@ -26,7 +26,7 @@
       @view="handleView"
       @delete="handleDeleteStudent"
     />
-    <DrawerAdd v-model="show" :title="'Add Student'">
+    <DrawerAdd v-model="show" :title="'Add Student'" @student-created="refreshData">
       <template #content></template>
     </DrawerAdd>
 
@@ -143,11 +143,22 @@ const handleDeleteStudent = async (id) => {
   await deleteStudent(idSelected.value);
 };
 
+const refreshData = async () => {
+  await Promise.all([
+    fetchAllFaculties(),
+    fetchPromotions(),
+    fetchUsers(),
+    fetchDepartements(),
+    fetchAllStudents(),
+  ]);
+};
+
 onMounted(async () => {
   await fetchAllFaculties();
   await fetchPromotions();
   await fetchUsers();
   await fetchDepartements();
   await fetchAllStudents();
+  await refreshData();
 });
 </script>

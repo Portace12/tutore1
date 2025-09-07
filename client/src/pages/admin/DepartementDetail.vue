@@ -12,10 +12,10 @@
             Faculté : <span class="font-semibold">{{ facultyName }}</span>
           </p>
           <p>
-            Total étudiants : <span class="font-semibold">{{ selectedDepartement?.students }}</span>
+            Total étudiants : <span class="font-semibold">{{ totalStudentsCount }}</span>
           </p>
           <p>
-            Promotion : <span class="font-semibold">{{ nbrProm.length }}</span>
+            Promotions : <span class="font-semibold">{{ myPromotions.length }}</span>
           </p>
         </div>
       </div>
@@ -46,12 +46,12 @@
             :key="promo.id"
             :class="[
               'flex items-center gap-2 p-3 rounded-xl shadow-md cursor-pointer transform transition-all duration-200',
-              selectedPromotion === promo
+              selectedPromotion && selectedPromotion.id === promo.id
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
               'active:scale-95',
             ]"
-            @click="test(promo)"
+            @click="selectPromotion(promo)"
           >
             <span class="font-medium text-sm">{{ promo.nom_promotion }}</span>
             <div class="flex items-center gap-1.5 ml-2">
@@ -106,136 +106,262 @@
         <button class="btn btn-primary w-1/2 md:w-auto shadow-lg" @click="handleClick">
           Add Promotion
         </button>
-        <button class="btn btn-info w-1/2 md:w-auto shadow-lg" v-if="myPromotions.length > 0">
+        <button
+          class="btn btn-info w-1/2 md:w-auto shadow-lg"
+          v-if="myPromotions.length > 0"
+          @click="handleStudentAdd"
+        >
           Add Student
         </button>
       </div>
     </section>
 
-    <Table :data="filteredStudents" :labels="label" :other-component="true" />
+    <Table
+      :data="filteredStudents"
+      :labels="label"
+      :other-component="true"
+      @view="handleViewStudent"
+      @delete="handleDeleteStudent"
+      @open="handleChildClique"
+    />
 
     <PromotionAdd v-model="openModal" :title="'Ajouter une promotion'" :id="idSelected" />
     <UpdateDepartement v-model="openUpdateModal" :data="selectedDepartement" />
     <UpdatePromotion v-model="openUpdatePromotionModal" :data="selectedPromotion" />
+
+    <DrawerAdd
+      v-model="openAddStudent"
+      :title="'Add Student'"
+      :data="{ id_departement: props.id }"
+    />
+    <ViewStudent v-model="openViewStudent" :title="'View Student'" :data="viewStudentData" />
+
+    <UpdateStudent v-model="update" :title="'Update Student'" :data="chilData">
+      <template #content></template>
+    </UpdateStudent>
   </div>
 </template>
+
 <script setup>
 import PromotionAdd from "@/components/PromotionAdd.vue";
 import Table from "@/components/Table.vue";
 import UpdateDepartement from "@/components/UpdateDepartement.vue";
 import UpdatePromotion from "@/components/UpdatePromotion.vue";
+import DrawerAdd from "@/components/DrawerAdd.vue";
+import ViewStudent from "@/components/ViewStudent.vue";
 import useDepartementStore from "@/stores/departementStore";
 import usePromotionStore from "@/stores/promotionStore";
+import useStudentStore from "@/stores/studentStore";
+import useUserStore from "@/stores/userstore";
+import { useFacultyStore } from "@/stores/facultyStore";
 import { storeToRefs } from "pinia";
-import { parse } from "postcss";
 import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import UpdateStudent from "@/components/UpdateStudent.vue";
 
 const props = defineProps({
   id: [Number, String],
 });
 const route = useRoute();
+const router = useRouter();
 const facultyName = route.params.facultyName || "Unknown Faculty";
+const server = "http://localhost:4000";
+
+// Stores
 const useDepartement = useDepartementStore();
-const { departements } = storeToRefs(useDepartement);
-const { fetchDepartements, deleteDepartement } = useDepartement;
 const usePromotion = usePromotionStore();
+const useStudent = useStudentStore();
+const useUser = useUserStore();
+const useFaculty = useFacultyStore();
+
+// State depuis les stores
+const { departements } = storeToRefs(useDepartement);
 const { promotions } = storeToRefs(usePromotion);
+const { students } = storeToRefs(useStudent);
+const { users } = storeToRefs(useUser);
+const { faculties } = storeToRefs(useFaculty);
+
+// Actions des stores
+const { fetchDepartements, deleteDepartement } = useDepartement;
 const { deletePromotion, fetchPromotions } = usePromotion;
+const { fetchAllStudents, deleteStudent } = useStudent;
+const { fetchUsers } = useUser;
+const { fetchAll: fetchAllFaculties } = useFaculty;
 
-const idSelected = departements.value.find((item) => item.id === parseInt(props.id))?.id;
-
+// Données locales
+const idSelected = computed(
+  () => departements.value.find((item) => item.id === parseInt(props.id))?.id
+);
 const selectedDepartement = ref({});
+const selectedPromotion = ref(null);
+const openModal = ref(false);
+const openUpdateModal = ref(false);
+const openUpdatePromotionModal = ref(false);
+const openAddStudent = ref(false);
+const openViewStudent = ref(false);
+const viewStudentData = ref({});
 
-const loadDepartement = async () => {
-  await fetchDepartements();
-  selectedDepartement.value =
-    departements.value.find((item) => item.id === parseInt(props.id)) || {};
-};
-if (props.id) {
-  onMounted(loadDepartement);
-}
-
-const students = ref([
-  { id: 1, name: "Alice", promotion: "Bac 1", email: "alice@example.com" },
-  { id: 2, name: "Bob", promotion: "Bac 2", email: "bob@example.com" },
-  { id: 3, name: "Charlie", promotion: "Bac 1", email: "charlie@example.com" },
-  { id: 4, name: "David", promotion: "Bac 3", email: "david@example.com" },
-  { id: 5, name: "Eve", promotion: "Bac 2", email: "eve@example.com" },
-]);
-
-const promotion = ref(["Bac 1", "Bac 2", "Bac 3"]);
-// const selectedPromotion = ref(promotion.value[0]);
-const selectedPromotion = ref({});
-const nbrProm = ref([]);
-watch(promotions, (newPromotions) => {
-  nbrProm.value = newPromotions.filter((item) => item.id_departement === parseInt(props.id));
-}, { immediate: true });
-
+// Propriétés calculées
 const myPromotions = computed(() => {
   return promotions.value.filter((item) => item.id_departement === selectedDepartement.value.id);
 });
 
-const filteredStudents = computed(() =>
-  students.value.filter((s) => s.promotion === selectedPromotion.value)
-);
+const filteredStudents = computed(() => {
+  if (!selectedPromotion.value || !selectedDepartement.value) {
+    return [];
+  }
 
-const openModal = ref(false);
-const handleClick = () => {
-  openModal.value = true;
+  const studentsInPromotion = students.value.filter(
+    (s) => s.id_promotion === selectedPromotion.value.id
+  );
+
+  return studentsInPromotion.map((student) => {
+    const user = users.value.find((u) => u.id === student.id_utilisateur);
+    const promotion = promotions.value.find((p) => p.id === student.id_promotion);
+    const departement = promotion
+      ? departements.value.find((d) => d.id === promotion.id_departement)
+      : null;
+    const faculty = departement
+      ? faculties.value.find((f) => f.id === departement.id_faculte)
+      : null;
+
+    return {
+      id: student.id,
+      img: student.photo_url,
+      name: student.nom,
+      date: student.anniv ? new Date(student.anniv).toLocaleDateString("fr-FR") : "",
+      email: user?.email || "",
+      matricule: user?.password || "",
+      faculty: faculty?.nom_faculte || "",
+      departement: departement?.nom_departement || "",
+      gender: student.genre,
+      promotion: promotion?.nom_promotion || "",
+    };
+  });
+});
+
+const totalStudentsCount = computed(() => {
+  const departmentPromotions = promotions.value.filter(
+    (prom) => prom.id_departement === selectedDepartement.value.id
+  );
+  const promotionIds = departmentPromotions.map((prom) => prom.id);
+  return students.value.filter((stu) => promotionIds.includes(stu.id_promotion)).length;
+});
+
+const label = ref([
+  "Name",
+  "Date",
+  "Email",
+  "Matricule",
+  "Faculty",
+  "Departement",
+  "Gender",
+  "Promotion",
+]);
+
+// Fonctions
+const loadDepartement = async () => {
+  await fetchDepartements();
+  selectedDepartement.value =
+    departements.value.find((item) => item.id === parseInt(props.id)) || {};
+
+  if (myPromotions.value.length > 0) {
+    selectedPromotion.value = myPromotions.value[0];
+  }
 };
-const label = ["Name", "Promotion", "Email"];
 
-const openUpdateModal = ref(false);
 const handleUpdateModale = () => {
   openUpdateModal.value = true;
 };
 
-// Quand la modale d'update se ferme, recharge le département
-watch(openUpdateModal, async (val) => {
-  if (!val) {
-    await loadDepartement();
-  }
-});
-const router = useRouter();
-const handleDelete = () => {
-  deleteDepartement(selectedDepartement.value.id);
+const handleDelete = async () => {
+  await deleteDepartement(selectedDepartement.value.id);
   router.go(-1);
 };
-const openUpdatePromotionModal = ref(false);
+
+const handleClick = () => {
+  openModal.value = true;
+};
+
 const handleEditPromotion = (promo) => {
   openUpdatePromotionModal.value = true;
   selectedPromotion.value = promo;
 };
 
-const test = (promo) => {
+const selectPromotion = (promo) => {
   selectedPromotion.value = promo;
 };
 
 const handleDeletePromotion = async (id) => {
   await deletePromotion(id);
-};
-onMounted(async () => {
   await fetchPromotions();
+};
+
+const handleStudentAdd = () => {
+  openAddStudent.value = true;
+};
+
+const handleViewStudent = (data) => {
+  viewStudentData.value = data;
+  openViewStudent.value = true;
+};
+
+const handleDeleteStudent = async (id) => {
+  const studentToDelete = students.value.find((item) => item.id === id);
+  if (studentToDelete) {
+    await deleteStudent(studentToDelete.id_utilisateur);
+    await fetchAllStudents();
+    await fetchUsers();
+  }
+};
+
+const update = ref(false);
+const chilData = ref([]);
+const handleChildClique = (data) => {
+  update.value = true;
+  chilData.value = data;
+};
+
+// Lifecycles & Watchers
+if (props.id) {
+  onMounted(async () => {
+    await Promise.all([
+      fetchAllFaculties(),
+      fetchPromotions(),
+      fetchUsers(),
+      fetchDepartements(),
+      fetchAllStudents(),
+    ]);
+    await loadDepartement();
+  });
+}
+
+watch(openUpdateModal, async (val) => {
+  if (!val) {
+    await loadDepartement();
+  }
+});
+
+watch(openAddStudent, async (val) => {
+  if (!val) {
+    await fetchAllStudents();
+    await fetchUsers();
+  }
 });
 </script>
 
 <style scoped>
-/*
-  Style pour la scrollbar (uniquement pour les navigateurs basés sur WebKit comme Chrome/Safari)
-*/
+/* Style pour la scrollbar */
 .scrollbar-thin::-webkit-scrollbar {
   height: 6px;
 }
-
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: #e5e7eb; /* bg-gray-200 */
+  background: #e5e7eb;
   border-radius: 10px;
 }
-
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: #9ca3af; /* bg-gray-400 */
+  background-color: #9ca3af;
   border-radius: 10px;
-  border: 1px solid #e5e7eb; /* border-gray-200 */
+  border: 1px solid #e5e7eb;
 }
 </style>

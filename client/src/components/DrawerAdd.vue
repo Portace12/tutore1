@@ -267,8 +267,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["update:modelValue"]);
-
+const emit = defineEmits(["update:modelValue","student-created" ]);
 const onToggle = () => {
   emit("update:modelValue", !props.modelValue);
 };
@@ -374,6 +373,7 @@ const handleSubmit = async () => {
 
   try {
     await createStudent(formData.value);
+    emit('student-created');
     // ** Correction: Après une soumission réussie **
     resetForm();
     onToggle(); // Ferme le tiroir

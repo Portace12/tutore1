@@ -117,15 +117,19 @@
       title="Update Faculty"
       :selectedFaculty="selectedFaculty"
     />
+
   </div>
 </template>
 
 <script setup>
 import DepartementAdd from "@/components/DepartementAdd.vue";
 import FacultyUpdate from "@/components/FacultyUpdate.vue";
+import UpdateStudent from "@/components/UpdateStudent.vue";
 import useDepartementStore from "@/stores/departementStore";
 import { useFacultyStore } from "@/stores/facultyStore";
 import usePromotionStore from "@/stores/promotionStore";
+import useStudentStore from "@/stores/studentStore";
+import useUserStore from "@/stores/userstore";
 import { storeToRefs } from "pinia";
 import { ref, onMounted, computed, watch } from "vue";
 import { useRouter } from "vue-router";
@@ -135,6 +139,17 @@ const props = defineProps({
   id: Number,
 });
 
+const studentStore = useStudentStore();
+const promotionStore = usePromotionStore();
+const userStore = useUserStore();
+
+const { students } = storeToRefs(studentStore);
+const { users } = storeToRefs(userStore);
+
+const { fetchPromotions } = promotionStore;
+const { fetchUsers } = userStore;
+const { fetchAllStudents, deleteStudent } = studentStore;
+
 const useFaculty = useFacultyStore();
 const { fetchAll, deleteFaculty } = useFaculty;
 const { faculties } = storeToRefs(useFaculty);
@@ -143,8 +158,8 @@ const useDepartement = useDepartementStore();
 const { fetchDepartements, deleteDepartement } = useDepartement;
 const { departements } = storeToRefs(useDepartement);
 
-const usePromotion = usePromotionStore()
-const {promotions} = storeToRefs(usePromotion)
+const usePromotion = usePromotionStore();
+const { promotions } = storeToRefs(usePromotion);
 
 const router = useRouter();
 
@@ -160,13 +175,20 @@ const filteredDepartements = computed(() => {
 
 // Format the filtered data for the table
 const dataSend = computed(() => {
-  return filteredDepartements.value.map((item) => ({
-    id: item.id,
-    name: item.nom_departement.toUpperCase(),
-    id_faculty: item.id_faculte,
-    promotion: promotions.value.filter((prom)=> prom.id_departement === item.id)?.length,
-    student: 0,
-  }));
+  return filteredDepartements.value.map((item) => {
+    const departmentPromotions = promotions.value.filter((prom) => prom.id_departement === item.id);
+    const studentCount = students.value.filter((stu) =>
+      departmentPromotions.some((prom) => prom.id === stu.id_promotion)
+    ).length;
+
+    return {
+      id: item.id,
+      name: item.nom_departement.toUpperCase(),
+      id_faculty: item.id_faculte,
+      promotion: departmentPromotions.length,
+      student: studentCount,
+    };
+  });
 });
 
 const label = ref(["Name", "Promotion", "Students"]);
