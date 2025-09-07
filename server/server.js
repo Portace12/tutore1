@@ -10,6 +10,7 @@ import promotionRoutes from './Routes/promotionRoute.js';
 import path from "path";
 import { fileURLToPath } from "url";
 import userRoutes from './Routes/userRoute.js'
+import studentRoutes from './Routes/studentRoutes.js'
 
 app.use(express.json())
 app.use(cors())
@@ -24,6 +25,7 @@ app.use('/api/faculty', facultyRoutes)
 app.use('/api/departement', departementRoutes)
 app.use('/api/promotion', promotionRoutes)
 app.use('/api/user', userRoutes)
+app.use('/api/student', studentRoutes)
 
 app.get('/', (req, res) => {
   res.send('API is running...');

@@ -13,136 +13,196 @@
 
     <div class="drawer-side z-50">
       <label for="drawer-comment" aria-label="close sidebar" class="drawer-overlay"></label>
-      <div class="p-6 w-[75%] h-auto lg:h-screen bg-base-200 flex flex-col">
-        <div class="flex items-center justify-between pb-4 border-b border-gray-200">
-          <h2 class="text-2xl font-extrabold text-blue-400">{{ props.title }}</h2>
-          <label
-            for="drawer-comment"
-            class="btn btn-sm btn-ghost p-2 rounded-full transition-colors duration-200"
-          >
+      <div
+        class="p-8 w-[95%] sm:w-[80%] md:w-[60%] lg:w-[75%] h-full bg-base-100 text-base flex flex-col shadow-xl"
+      >
+        <div class="flex items-center justify-between pb-4 border-b border-base-300">
+          <h2 class="text-2xl font-bold">{{ props.title }}</h2>
+          <label for="drawer-comment" class="btn btn-sm btn-ghost">
             <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 text-gray-600 dark:text-gray-400"
+              class="w-6 h-6"
               fill="none"
-              viewBox="0 0 24 24"
               stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
             >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
                 d="M6 18L18 6M6 6l12 12"
-              />
+              ></path>
             </svg>
           </label>
         </div>
-        <div class="w-full p-6 mt-5">
-          <h1 class="text-3xl font-extrabold text-center mb-5">Registration Form</h1>
-          <div class="flex flex-col lg:flex-row lg:space-x-12">
-            <div class="flex-grow">
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div>
-                  <label for="first_name" class="block text-sm font-semibold">Fullname</label>
+        <div class="w-full flex-grow overflow-y-auto">
+          <div class="py-6">
+            <h1 class="text-3xl font-extrabold text-center mb-6 text-primary">Registration Form</h1>
+            <form @submit.prevent="handleSubmit" class="space-y-6">
+              <!-- Photo Upload Section -->
+              <div class="flex flex-col items-center">
+                <div
+                  class="relative w-40 h-40 mb-4 rounded-full overflow-hidden border-2 border-base-300"
+                >
+                  <img
+                    v-if="photoPreview"
+                    :src="photoPreview"
+                    alt="Profile photo"
+                    class="w-full h-full object-cover"
+                  />
+                  <div v-else class="w-full h-full flex items-center justify-center bg-base-200">
+                    <span>No Photo</span>
+                  </div>
+                </div>
+                <label for="file_upload" class="btn btn-primary btn-sm normal-case">
+                  <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                    />
+                  </svg>
+                  Upload a picture
+                </label>
+                <input
+                  type="file"
+                  id="file_upload"
+                  @change="handleFileChange"
+                  accept="image/*"
+                  class="hidden"
+                />
+              </div>
+
+              <!-- Form Fields -->
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                <div class="form-control">
+                  <label for="first_name" class="label">
+                    <span class="label-text font-medium">Fullname</span>
+                  </label>
                   <input
                     type="text"
                     id="first_name"
                     placeholder="Enter the first name"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                    class="input input-bordered w-full"
                   />
                 </div>
-                <div>
-                  <label for="date_of_birth" class="block text-sm font-semibold">Date</label>
-                  <input
-                    type="date"
-                    id="date_of_birth"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                  />
+                <div class="form-control">
+                  <label for="date_of_birth" class="label">
+                    <span class="label-text font-medium">Date</span>
+                  </label>
+                  <input type="date" id="date_of_birth" class="input input-bordered w-full" />
                 </div>
-                <div>
-                  <label for="email" class="block text-sm font-semibold">Email</label>
+                <div class="form-control">
+                  <label for="email" class="label">
+                    <span class="label-text font-medium">Email</span>
+                  </label>
                   <input
                     type="email"
                     id="email"
                     placeholder="ex@gmail.com"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                    class="input input-bordered w-full"
                   />
                 </div>
-                <div>
-                  <label for="matricule" class="block text-sm font-semibold">Matricule</label>
+                <div class="form-control">
+                  <label for="matricule" class="label">
+                    <span class="label-text font-medium">Matricule</span>
+                  </label>
                   <input
                     type="text"
                     id="matricule"
                     placeholder="Enter the matricule"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                    class="input input-bordered w-full"
                   />
                 </div>
-                <div>
-                  <label for="faculty" class="block text-sm font-semibold">Faculty</label>
+                <div class="form-control">
+                  <label for="faculty" class="label">
+                    <span class="label-text font-medium">Faculty</span>
+                  </label>
                   <select
                     id="faculty"
-                    class="mt-1 block bg-base-100 w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                    v-model="facultyChoosed"
+                    class="select select-bordered w-full"
                   >
-                    <option disabled selected>Choose a faculty</option>
-                    <!-- <option>Crimson</option>
-                    <option>Amber</option>
-                    <option>Velvet</option> -->
-                    <div v-if="selectFaculties.length > 0">
+                    <option disabled selected value="">Choose a faculty</option>
+                    <template v-if="selectFaculties.length > 0">
                       <option
                         v-for="faculty in selectFaculties"
-                        :key="faculty.id"
-                        :value="faculty.id"
+                        :key="faculty.value"
+                        :value="faculty.value"
                       >
                         {{ faculty.label }}
                       </option>
-                    </div>
-                    <div v-else>
-                      No Faculties
-                    </div>
-                  </select>
-                </div>
-                <div>
-                  <label for="department" class="block text-sm font-semibold">Department</label>
-                  <select
-                    id="department"
-                    class="mt-1 block w-full bg-base-100 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                  >
-                    <option disabled selected>Choose a department</option>
-                    <option>Crimson</option>
-                    <option>Amber</option>
-                    <option>Velvet</option>
+                    </template>
+                    <option v-else disabled>No Faculties available</option>
                   </select>
                 </div>
 
-                <div>
-                  <label for="promotion" class="block text-sm font-semibold">Promotion</label>
+                <div class="form-control">
+                  <label for="department" class="label">
+                    <span class="label-text font-medium">Department</span>
+                  </label>
+                  <select
+                    id="department"
+                    v-model="departementChoosed"
+                    class="select select-bordered w-full"
+                  >
+                    <option v-if="!facultyChoosed" disabled selected value="">
+                      Choose a faculty first
+                    </option>
+                    <option v-if="facultyChoosed" disabled selected value="">
+                      Choose a department
+                    </option>
+                    <template v-if="facultyChoosed && selectDepartement.length > 0">
+                      <option v-for="dep in selectDepartement" :key="dep.value" :value="dep.value">
+                        {{ dep.label }}
+                      </option>
+                    </template>
+                    <option v-else-if="facultyChoosed" disabled>No departments available</option>
+                  </select>
+                </div>
+
+                <div class="form-control">
+                  <label for="promotion" class="label">
+                    <span class="label-text font-medium">Promotion</span>
+                  </label>
                   <select
                     id="promotion"
-                    class="mt-1 block w-full bg-base-100 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                    v-model="promotionChoosed"
+                    class="select select-bordered w-full"
                   >
-                    <option disabled selected>Choose a promotion</option>
-                    <option>Crimson</option>
-                    <option>Amber</option>
-                    <option>Velvet</option>
+                    <option v-if="!departementChoosed" disabled selected value="">
+                      Choose a department first
+                    </option>
+                    <option v-if="departementChoosed" disabled selected value="">
+                      Choose a promotion
+                    </option>
+                    <template v-if="departementChoosed && selectPromotion.length > 0">
+                      <option v-for="prom in selectPromotion" :key="prom.value" :value="prom.value">
+                        {{ prom.label }}
+                      </option>
+                    </template>
+                    <option v-else-if="departementChoosed" disabled>No promotions available</option>
                   </select>
                 </div>
 
-                <div>
-                  <label for="role" class="block text-sm font-semibold">Role</label>
-                  <select
-                    id="department"
-                    class="mt-1 block w-full bg-base-100 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                  >
+                <div class="form-control">
+                  <label for="role" class="label">
+                    <span class="label-text font-medium">Role</span>
+                  </label>
+                  <select id="role" class="select select-bordered w-full">
                     <option disabled selected>Choose a role</option>
-                    <option>Students</option>
                     <option>Admin</option>
+                    <option>Professor</option>
+                    <option>Students</option>
                   </select>
                 </div>
-                <div>
-                  <label for="gender" class="block text-sm font-semibold">Gender</label>
-                  <select
-                    id="gender"
-                    class="mt-1 block w-full bg-base-100 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-                  >
+
+                <div class="form-control">
+                  <label for="gender" class="label">
+                    <span class="label-text font-medium">Gender</span>
+                  </label>
+                  <select id="gender" class="select select-bordered w-full">
                     <option disabled selected>Choose a gender</option>
                     <option>Man</option>
                     <option>Woman</option>
@@ -150,30 +210,12 @@
                   </select>
                 </div>
               </div>
-            </div>
-            <div
-              class="mt-10 lg:mt-0 flex flex-col items-center justify-center p-6 bg-base-100 rounded-md lg:w-1/3"
-            >
-              <label for="file_upload" class="flex flex-col items-center cursor-pointer">
-                <svg class="h-20 w-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                  />
-                </svg>
-                <span class="mt-2 text-sm font-medium">Upload a picture</span>
-              </label>
-              <input type="file" id="file_upload" class="hidden" />
-            </div>
+
+              <div class="mt-8">
+                <button type="submit" class="btn btn-primary w-full">Submit</button>
+              </div>
+            </form>
           </div>
-          <button
-            type="submit"
-            class="mt-10 w-full px-6 py-3 cursor-pointer bg-indigo-600 font-semibold rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-          >
-            Submit
-          </button>
         </div>
       </div>
     </div>
@@ -185,7 +227,7 @@ import useDepartementStore from "@/stores/departementStore";
 import { useFacultyStore } from "@/stores/facultyStore";
 import usePromotionStore from "@/stores/promotionStore";
 import { storeToRefs } from "pinia";
-import { defineProps, defineEmits, computed, onMounted } from "vue";
+import { defineProps, defineEmits, computed, onMounted, ref, watch } from "vue";
 const usePromotion = usePromotionStore();
 const useFaculty = useFacultyStore();
 const useDepartement = useDepartementStore();
@@ -209,27 +251,45 @@ const props = defineProps({
   },
 });
 
+const facultyChoosed = ref(null);
+const departementChoosed = ref(null);
+const promotionChoosed = ref(null);
+
 const selectFaculties = computed(() => {
   return faculties.value.map((item) => ({
     value: item.id,
-    label: item.nom_faculte,
+    label: item.nom_faculte.toUpperCase(),
   }));
+});
+
+watch(facultyChoosed, (newSelection) => {
+  facultyChoosed.value = newSelection;
+});
+
+watch(departementChoosed, (newSelection) => {
+  departementChoosed.value = newSelection;
 });
 
 const selectDepartement = computed(() => {
-  return departements.value
-    .filter((dep) => dep.id_faculte === selectFaculties.filter((fac) => fac).id)
-    .map((item) => ({
-      value: item.id,
-      label: item.nom_promotion,
-    }));
+  if (facultyChoosed.value) {
+    return departements.value
+      .filter((dep) => dep.id_faculte === facultyChoosed.value)
+      .map((item) => ({
+        value: item.id,
+        label: item.nom_departement.toUpperCase(),
+      }));
+  }
 });
 
 const selectPromotion = computed(() => {
-  return promotions.value.map((item) => ({
-    value: item.id,
-    label: item.nom_promotion,
-  }));
+  if (departementChoosed.value && facultyChoosed.value) {
+    return promotions.value
+      .filter((prom) => prom.id_departement === departementChoosed.value)
+      .map((item) => ({
+        value: item.id,
+        label: item.nom_promotion,
+      }));
+  }
 });
 
 const emit = defineEmits(["update:modelValue"]);
