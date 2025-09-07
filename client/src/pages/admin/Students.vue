@@ -24,6 +24,7 @@
       :other-component="true"
       @open="handleChildClique"
       @view="handleView"
+      @delete="handleDeleteStudent"
     />
     <DrawerAdd v-model="show" :title="'Add Student'">
       <template #content></template>
@@ -67,7 +68,7 @@ const { departements } = storeToRefs(departementStore);
 const { fetchAll: fetchAllFaculties } = facultyStore;
 const { fetchPromotions } = promotionStore;
 const { fetchUsers } = userStore;
-const { fetchAllStudents } = studentStore;
+const { fetchAllStudents, deleteStudent } = studentStore;
 const { fetchDepartements } = departementStore;
 
 const show = ref(false);
@@ -76,19 +77,29 @@ const handleClick = () => {
 };
 
 const dataSend = computed(() => {
-  if (!students.value || !users.value || !promotions.value || !departements.value || !faculties.value) {
+  if (
+    !students.value ||
+    !users.value ||
+    !promotions.value ||
+    !departements.value ||
+    !faculties.value
+  ) {
     return [];
   }
 
   return students.value.map((item) => {
     const user = users.value.find((u) => u.id === item.id_utilisateur);
     const promotion = promotions.value.find((p) => p.id === item.id_promotion);
-    const departement = promotion ? departements.value.find((d) => d.id === promotion.id_departement) : null;
-    const faculty = departement ? faculties.value.find((f) => f.id === departement.id_faculte) : null;
+    const departement = promotion
+      ? departements.value.find((d) => d.id === promotion.id_departement)
+      : null;
+    const faculty = departement
+      ? faculties.value.find((f) => f.id === departement.id_faculte)
+      : null;
 
     return {
       id: item.id,
-      img:item.photo_url,
+      img: item.photo_url,
       name: item.nom,
       date: item.anniv ? new Date(item.anniv).toLocaleDateString("fr-FR") : "",
       email: user?.email || "",
@@ -124,6 +135,12 @@ const handleChildClique = (data) => {
 const handleView = (data) => {
   view.value = true;
   viewData.value = data;
+};
+const idSelected = ref(null);
+
+const handleDeleteStudent = async (id) => {
+  idSelected.value = students.value.find((item) => item.id === id)?.id_utilisateur || null;
+  await deleteStudent(idSelected.value);
 };
 
 onMounted(async () => {
