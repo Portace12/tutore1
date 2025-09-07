@@ -38,6 +38,14 @@ export const findSUer = async (connection, email)=>{
         throw error
     }
 }
+export const findUserByMat = async (connection, password)=>{
+    try {
+        const [result] = await connection.query("SELECT * FROM utilisateurs WHERE password = ?", [password]);
+        return result[0];
+    } catch (error) {
+        throw error
+    }
+}
 
 export const updateUser = async (connection, id, data) => {
     try {

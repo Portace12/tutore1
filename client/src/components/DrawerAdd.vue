@@ -83,6 +83,7 @@
                   <input
                     type="text"
                     id="first_name"
+                    v-model="formData.fullname"
                     placeholder="Enter the first name"
                     class="input input-bordered w-full"
                   />
@@ -91,7 +92,12 @@
                   <label for="date_of_birth" class="label">
                     <span class="label-text font-medium">Date</span>
                   </label>
-                  <input type="date" id="date_of_birth" class="input input-bordered w-full" />
+                  <input
+                    type="date"
+                    id="date_of_birth"
+                    v-model="formData.date"
+                    class="input input-bordered w-full"
+                  />
                 </div>
                 <div class="form-control">
                   <label for="email" class="label">
@@ -99,6 +105,7 @@
                   </label>
                   <input
                     type="email"
+                    v-model="formData.email"
                     id="email"
                     placeholder="ex@gmail.com"
                     class="input input-bordered w-full"
@@ -110,6 +117,7 @@
                   </label>
                   <input
                     type="text"
+                    v-model="formData.matricule"
                     id="matricule"
                     placeholder="Enter the matricule"
                     class="input input-bordered w-full"
@@ -190,11 +198,11 @@
                   <label for="role" class="label">
                     <span class="label-text font-medium">Role</span>
                   </label>
-                  <select id="role" class="select select-bordered w-full">
+                  <select id="role" class="select select-bordered w-full" v-model="formData.role">
                     <option disabled selected>Choose a role</option>
-                    <option>Admin</option>
-                    <option>Professor</option>
-                    <option>Students</option>
+                    <option value="Student">Student</option>
+                    <option value="Professor">Professor</option>
+                    <option value="Admin">Admin</option>
                   </select>
                 </div>
 
@@ -202,7 +210,11 @@
                   <label for="gender" class="label">
                     <span class="label-text font-medium">Gender</span>
                   </label>
-                  <select id="gender" class="select select-bordered w-full">
+                  <select
+                    id="gender"
+                    class="select select-bordered w-full"
+                    v-model="formData.gender"
+                  >
                     <option disabled selected>Choose a gender</option>
                     <option>Man</option>
                     <option>Woman</option>
@@ -228,13 +240,17 @@ import { useFacultyStore } from "@/stores/facultyStore";
 import usePromotionStore from "@/stores/promotionStore";
 import { storeToRefs } from "pinia";
 import { defineProps, defineEmits, computed, onMounted, ref, watch } from "vue";
+import { errorNotification } from "../../helpers";
+import useStudentStore from "@/stores/studentStore";
 const usePromotion = usePromotionStore();
 const useFaculty = useFacultyStore();
 const useDepartement = useDepartementStore();
+const useStudent = useStudentStore();
 
 const { promotions } = storeToRefs(usePromotion);
 const { faculties } = storeToRefs(useFaculty);
 const { departements } = storeToRefs(useDepartement);
+const { createStudent } = useStudent;
 
 const { fetchAll } = useFaculty;
 const { fetchDepartements } = useDepartement;
@@ -296,6 +312,66 @@ const emit = defineEmits(["update:modelValue"]);
 
 const onToggle = () => {
   emit("update:modelValue", !props.modelValue);
+};
+
+const formData = ref({
+  fullname: "",
+  date: "",
+  email: "",
+  matricule: "",
+  role: "",
+  gender: "",
+  promotion: null,
+  photo: null,
+});
+const photoPreview = ref(null);
+const handleFileChange = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    formData.value.photo = file;
+    // Création d'une URL de données pour la prévisualisation
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      photoPreview.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+watch(promotionChoosed, (newProm) => {
+  formData.value.promotion = newProm;
+});
+
+const handleSubmit = async () => {
+  if (
+    !formData.value.fullname ||
+    !formData.value.email ||
+    !formData.value.matricule ||
+    !formData.value.role ||
+    !formData.value.gender ||
+    !formData.value.promotion ||
+    !formData.value.date
+  ) {
+    errorNotification("Please fill all fields");
+    return;
+  }
+  console.log(formData.value);
+
+  await createStudent(formData.value);
+  formData.value = {
+    fullname: "",
+    date: "",
+    email: "",
+    matricule: "",
+    role: "",
+    gender: "",
+    photo: null,
+  };
+  photoPreview = null;
+  facultyChoosed = null;
+  departementChoosed = null;
+  promotionChoosed = null;
+  onToggle();
 };
 
 onMounted(async () => {
