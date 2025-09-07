@@ -102,7 +102,7 @@
                 </svg>
                 Update
               </button>
-              <button class="btn btn-error" @click="openDeleteModal">
+              <button class="btn btn-error" @click="handleDeleteStudent(formattedData.id)">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   class="h-5 w-5"
@@ -176,6 +176,8 @@ const { promotions } = storeToRefs(promotionStore);
 const { faculties } = storeToRefs(facultyStore);
 const { departements } = storeToRefs(departementStore);
 
+const {deleteStudent} = studentStore
+
 // Computed property to format data before sending to Update
 const formattedData = computed(() => {
   if (!props.data || !students.value.length || !users.value.length || !promotions.value.length || !departements.value.length || !faculties.value.length) {
@@ -221,8 +223,10 @@ const openUpdate = () => {
     newUpdate.value = true;
   }, 300);
 };
-
-const openDeleteModal = () => {
-  console.log("Delete modal opened for:", props.data);
+const idSelected = ref(null)
+const handleDeleteStudent = async (id) => {
+  idSelected.value = students.value.find((item) => item.id === id)?.id_utilisateur || null;
+  await deleteStudent(idSelected.value);
+  closeDrawer()
 };
 </script>
