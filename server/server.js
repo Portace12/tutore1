@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import mysql from "mysql2/promise";
 import "dotenv/config";
-const app = express()
 import professorRoutes from './Routes/professorRoutes.js';
 import facultyRoutes from "./Routes/facultyRoute.js"
 import departementRoutes from './Routes/departementRoute.js'
@@ -11,7 +10,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 import userRoutes from './Routes/userRoute.js'
 import studentRoutes from './Routes/studentRoutes.js'
+import courseRoutes from './Routes/courseRoute.js'
 
+const app = express()
 app.use(express.json())
 app.use(cors())
 
@@ -26,6 +27,8 @@ app.use('/api/departement', departementRoutes)
 app.use('/api/promotion', promotionRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/student', studentRoutes)
+app.use('/api/course', courseRoutes)
+
 
 app.get('/', (req, res) => {
   res.send('API is running...');

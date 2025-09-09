@@ -49,16 +49,15 @@ const { students } = storeToRefs(studentStore);
 // Calculs dynamiques du nombre d'étudiants par genre
 const maleCount = computed(() => students.value.filter((stu) => stu.gender === "Man").length);
 const femaleCount = computed(() => students.value.filter((stu) => stu.gender === "Woman").length);
-const privateCount = computed(() => students.value.filter((stu) => stu.gender === "Private").length);
 
 // Les données du graphique
 const chartData = computed(() => ({
-  labels: ["Male", "Female", "Private"],
+  labels: ["Male", "Female"],
   datasets: [
     {
       // Ordre des couleurs ajusté: Rouge pour Male, Violet pour Female, Vert pour Private
-      backgroundColor: ["#FF6384", "#6C77FF", "#00C0A3"],
-      data: [maleCount.value, femaleCount.value, privateCount.value],
+      backgroundColor: ["#FF6384", "#6C77FF"],
+      data: [700, 800],
       borderWidth: 0,
     },
   ],
