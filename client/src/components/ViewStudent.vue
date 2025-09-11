@@ -128,6 +128,12 @@
     <UpdateStudent v-model="newUpdate" :title="'Update Student'" :data="formattedData || {}">
       <template #content></template>
     </UpdateStudent>
+
+    <AlertModal
+      v-model="isDeleteModalOpen"
+      :message="'Are you sure you want to delete this Student? This action cannot be undone.'"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>
 
@@ -140,6 +146,7 @@ import usePromotionStore from "@/stores/promotionStore";
 import useUserStore from "@/stores/userstore";
 import { useFacultyStore } from "@/stores/facultyStore";
 import useDepartementStore from "@/stores/departementStore";
+import AlertModal from "./AlertModal.vue";
 
 const props = defineProps({
   modelValue: {
@@ -158,7 +165,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["update:modelValue"]);
-
+const isDeleteModalOpen = ref(false);
 const isOpen = ref(props.modelValue);
 const newUpdate = ref(false);
 
@@ -176,11 +183,18 @@ const { promotions } = storeToRefs(promotionStore);
 const { faculties } = storeToRefs(facultyStore);
 const { departements } = storeToRefs(departementStore);
 
-const {deleteStudent} = studentStore
+const { deleteStudent } = studentStore;
 
 // Computed property to format data before sending to Update
 const formattedData = computed(() => {
-  if (!props.data || !students.value.length || !users.value.length || !promotions.value.length || !departements.value.length || !faculties.value.length) {
+  if (
+    !props.data ||
+    !students.value.length ||
+    !users.value.length ||
+    !promotions.value.length ||
+    !departements.value.length ||
+    !faculties.value.length
+  ) {
     return null;
   }
 
@@ -192,7 +206,9 @@ const formattedData = computed(() => {
 
   const user = users.value.find((u) => u.id === student.id_utilisateur);
   const promotion = promotions.value.find((p) => p.id === student.id_promotion);
-  const departement = promotion ? departements.value.find((d) => d.id === promotion.id_departement) : null;
+  const departement = promotion
+    ? departements.value.find((d) => d.id === promotion.id_departement)
+    : null;
   const faculty = departement ? faculties.value.find((f) => f.id === departement.id_faculte) : null;
 
   return {
@@ -223,10 +239,14 @@ const openUpdate = () => {
     newUpdate.value = true;
   }, 300);
 };
-const idSelected = ref(null)
+const idSelected = ref(null);
 const handleDeleteStudent = async (id) => {
   idSelected.value = students.value.find((item) => item.id === id)?.id_utilisateur || null;
+  isDeleteModalOpen.value = true;
+};
+
+const confirmDelete = async () => {
   await deleteStudent(idSelected.value);
-  closeDrawer()
+  closeDrawer();
 };
 </script>

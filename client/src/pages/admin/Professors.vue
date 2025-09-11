@@ -37,6 +37,12 @@
     <ViewProfessor v-model="view" :title="'View Professor'" :data="dataSend.find(item => item.id === viewData.id) ? {...viewData, ...dataSend.find(item => item.id === viewData.id)} : viewData">
       <template #content> </template>
     </ViewProfessor>
+
+      <AlertModal
+      v-model="isDeleteModalOpen"
+      :message="'Are you sure you want to delete this professor? This action cannot be undone.'"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>
 
@@ -49,6 +55,7 @@ import ViewProfessor from "@/components/ViewProfessor.vue";
 import useProfessorStore from "@/stores/professorStore";
 import { storeToRefs } from "pinia";
 import useUserStore from "@/stores/userstore";
+import AlertModal from "@/components/AlertModal.vue";
 
 const useProfessor = useProfessorStore();
 const { professors } = storeToRefs(useProfessor);
@@ -84,11 +91,15 @@ const chilData = ref([]);
 const viewData = ref([]);
 const view = ref(false);
 const idSelected = ref(null);
+const isDeleteModalOpen = ref(false)
 
 const handleChildClique = (data) => {
   update.value = true;
   chilData.value = data;
 };
+console.log(viewData.value);
+
+
 const handleView = (data) => {
   view.value = true;
   viewData.value = {
@@ -101,9 +112,13 @@ const handleView = (data) => {
 };
 
 const handleDelete = async (id) => {
+  isDeleteModalOpen.value = true
   idSelected.value = professors.value.find((item) => item.id === id)?.id_utilisateur || null;
-  await deleteProfessor(idSelected.value);
 };
+
+const confirmDelete = async ()=>{
+    await deleteProfessor(idSelected.value);
+}
 
 onMounted(async () => {
   await fetchUsers();

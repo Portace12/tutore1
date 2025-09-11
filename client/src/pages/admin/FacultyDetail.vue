@@ -23,7 +23,7 @@
             </button>
             <button
               class="px-5 py-2 text-white bg-red-600 hover:bg-red-700 rounded-full font-semibold transition-colors duration-200 shadow-md transform hover:scale-105"
-              @click="handleDelete(selectedFaculty.id)"
+              @click="handleDeleteFac(selectedFaculty.id)"
             >
               Delete
             </button>
@@ -87,7 +87,7 @@
                     </router-link>
 
                     <button
-                      @click="handleDelete(item.id)"
+                      @click="handleDeleteDep(item.id)"
                       class="bg-red-500 text-white px-3 py-1 rounded-lg shadow hover:bg-red-600 transition"
                     >
                       Delete
@@ -117,21 +117,21 @@
       title="Update Faculty"
       :selectedFaculty="selectedFaculty"
     />
-
+    <AlertModal v-model="isDeleteModalOpen" :message="message" @confirm="handleDeleteItem" />
   </div>
 </template>
 
 <script setup>
+import AlertModal from "@/components/AlertModal.vue";
 import DepartementAdd from "@/components/DepartementAdd.vue";
 import FacultyUpdate from "@/components/FacultyUpdate.vue";
-import UpdateStudent from "@/components/UpdateStudent.vue";
 import useDepartementStore from "@/stores/departementStore";
 import { useFacultyStore } from "@/stores/facultyStore";
 import usePromotionStore from "@/stores/promotionStore";
 import useStudentStore from "@/stores/studentStore";
 import useUserStore from "@/stores/userstore";
 import { storeToRefs } from "pinia";
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 
 const props = defineProps({
@@ -193,6 +193,10 @@ const dataSend = computed(() => {
 
 const label = ref(["Name", "Promotion", "Students"]);
 const openModal = ref(false);
+const isDeleteModalOpen = ref(false);
+const depID = ref(null);
+const facID = ref(null);
+const message = ref("");
 const handleClick = () => {
   openModal.value = true;
 };
@@ -212,12 +216,37 @@ const handleClickUpdate = () => {
   isUpdateModalOpen.value = true;
 };
 
-const handleDelete = (id) => {
-  deleteDepartement(id);
+const handleDeleteDep = async (id) => {
+  depID.value = id;
+  facID.value = null; // Réinitialise l'autre ID
+  message.value = "Are you sure you want to delete this departement? This action will result in the deletion of all associated promotions, and students."
+  isDeleteModalOpen.value = true;
+};
+
+const handleDeleteFac = async (id) => {
+  facID.value = id;
+  depID.value = null; // Réinitialise l'autre ID
+  message.value = "Are you sure you want to delete this faculty? This action will result in the deletion of all associated departments, promotions, and students."
+  isDeleteModalOpen.value = true;
+};
+
+const handleDeleteItem = async () => {
+  isDeleteModalOpen.value = false; // Ferme le modal avant l'action
+  if (depID.value) {
+    await deleteDepartement(depID.value);
+    depID.value = null; // Réinitialise l'ID après l'action
+  } else if (facID.value) {
+    await deleteFaculty(facID.value);
+    facID.value = null; // Réinitialise l'ID après l'action
+    router.go(-1);
+  }
+  message.value = ""; // Réinitialise le message
 };
 
 onMounted(async () => {
   await fetchAll();
   await fetchDepartements();
+  await fetchPromotions();
+  await fetchAllStudents();
 });
 </script>

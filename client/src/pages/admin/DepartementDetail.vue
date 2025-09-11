@@ -139,6 +139,12 @@
     <UpdateStudent v-model="update" :title="'Update Student'" :data="chilData">
       <template #content></template>
     </UpdateStudent>
+
+    <AlertModal
+      v-model="isDeleteModalOpen"
+      :message="message"
+      @confirm="handleConfirmDelete"
+    />
   </div>
 </template>
 
@@ -149,6 +155,7 @@ import UpdateDepartement from "@/components/UpdateDepartement.vue";
 import UpdatePromotion from "@/components/UpdatePromotion.vue";
 import DrawerAdd from "@/components/DrawerAdd.vue";
 import ViewStudent from "@/components/ViewStudent.vue";
+import AlertModal from "@/components/AlertModal.vue"; // Importez le composant d'alerte
 import useDepartementStore from "@/stores/departementStore";
 import usePromotionStore from "@/stores/promotionStore";
 import useStudentStore from "@/stores/studentStore";
@@ -200,6 +207,9 @@ const openUpdatePromotionModal = ref(false);
 const openAddStudent = ref(false);
 const openViewStudent = ref(false);
 const viewStudentData = ref({});
+const isDeleteModalOpen = ref(false); // Ajout d'une ref pour l'état du modal
+const message = ref("");
+const itemToDelete = ref({ id: null, type: null }); // Réf pour stocker l'ID et le type d'élément à supprimer
 
 // Propriétés calculées
 const myPromotions = computed(() => {
@@ -259,6 +269,43 @@ const label = ref([
   "Promotion",
 ]);
 
+// Fonctions pour les alertes
+const openDeleteModal = (id, type) => {
+  itemToDelete.value = { id, type };
+  if (type === 'departement') {
+    message.value = "Are you sure you want to delete this department? This action will also delete all associated promotions and students.";
+  } else if (type === 'promotion') {
+    message.value = "Are you sure you want to delete this promotion? This action will also delete all associated students.";
+  } else if (type === 'student') {
+    message.value = "Are you sure you want to delete this student?";
+  }
+  isDeleteModalOpen.value = true;
+};
+
+const handleConfirmDelete = async () => {
+  const { id, type } = itemToDelete.value;
+  isDeleteModalOpen.value = false; // Ferme le modal
+  message.value = ""; // Réinitialise le message
+
+  if (type === 'departement') {
+    await deleteDepartement(id);
+    router.go(-1);
+  } else if (type === 'promotion') {
+    await deletePromotion(id);
+    await fetchPromotions();
+  } else if (type === 'student') {
+    const studentToDelete = students.value.find(item => item.id === id);
+    if (studentToDelete) {
+      await deleteStudent(studentToDelete.id_utilisateur);
+      await fetchAllStudents();
+      await fetchUsers();
+    }
+  }
+
+  // Réinitialise l'élément à supprimer
+  itemToDelete.value = { id: null, type: null };
+};
+
 // Fonctions
 const loadDepartement = async () => {
   await fetchDepartements();
@@ -274,9 +321,9 @@ const handleUpdateModale = () => {
   openUpdateModal.value = true;
 };
 
-const handleDelete = async () => {
-  await deleteDepartement(selectedDepartement.value.id);
-  router.go(-1);
+// Modification de la fonction de suppression du département
+const handleDelete = () => {
+  openDeleteModal(selectedDepartement.value.id, 'departement');
 };
 
 const handleClick = () => {
@@ -292,9 +339,9 @@ const selectPromotion = (promo) => {
   selectedPromotion.value = promo;
 };
 
-const handleDeletePromotion = async (id) => {
-  await deletePromotion(id);
-  await fetchPromotions();
+// Modification de la fonction de suppression de la promotion
+const handleDeletePromotion = (id) => {
+  openDeleteModal(id, 'promotion');
 };
 
 const handleStudentAdd = () => {
@@ -306,13 +353,9 @@ const handleViewStudent = (data) => {
   openViewStudent.value = true;
 };
 
-const handleDeleteStudent = async (id) => {
-  const studentToDelete = students.value.find((item) => item.id === id);
-  if (studentToDelete) {
-    await deleteStudent(studentToDelete.id_utilisateur);
-    await fetchAllStudents();
-    await fetchUsers();
-  }
+// Modification de la fonction de suppression de l'étudiant
+const handleDeleteStudent = (id) => {
+  openDeleteModal(id, 'student');
 };
 
 const update = ref(false);

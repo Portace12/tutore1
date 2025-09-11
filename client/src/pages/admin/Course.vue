@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
-      <h1 class="text-3xl md:text-4xl font-extrabold ">Courses</h1>
+      <h1 class="text-3xl md:text-4xl font-extrabold">Courses</h1>
 
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
         <label class="input input-bordered flex items-center gap-2 w-full sm:w-60">
@@ -90,6 +90,12 @@
     <AddCourse v-model="isAddModalOpen" title="Add Course" @course-created="loadStore" />
     <UpdateCourse v-model="isUpdateModalOpen" title="Update Course" :idCours="selectedCourse" />
     <ViewCourse v-model="isViewModalopen" title="View Course" :data="viewCourse" />
+
+    <AlertModal
+      v-model="isDeleteModalOpen"
+      :message="message"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>
 
@@ -97,6 +103,7 @@
 import AddCourse from "@/components/AddCourse.vue";
 import UpdateCourse from "@/components/UpdateCourse.vue";
 import ViewCourse from "@/components/ViewCourse.vue";
+import AlertModal from "@/components/AlertModal.vue"; // Importation du composant d'alerte
 import { useCourseStore } from "@/stores/courseStore";
 import useDepartementStore from "@/stores/departementStore";
 import { useFacultyStore } from "@/stores/facultyStore";
@@ -132,6 +139,9 @@ const isUpdateModalOpen = ref(false);
 const isViewModalopen = ref(false);
 const selectedCourse = ref(null);
 const searchQuery = ref("");
+const isDeleteModalOpen = ref(false); // État du modal d'alerte
+const message = ref(""); // Message de l'alerte
+const courseToDeleteId = ref(null); // ID du cours à supprimer
 
 const openAddModal = () => {
   isAddModalOpen.value = true;
@@ -141,6 +151,7 @@ const openUpdateModal = (id) => {
   selectedCourse.value = id;
   isUpdateModalOpen.value = true;
 };
+
 const viewCourse = ref(null);
 const openViewModal = (data) => {
   viewCourse.value = data;
@@ -201,8 +212,21 @@ const filteredCourses = computed(() => {
   );
 });
 
-const handleDelete = async (id) => {
-  await deleteCourse(id);
+// Nouvelle fonction pour gérer le déclenchement de l'alerte
+const handleDelete = (id) => {
+  courseToDeleteId.value = id;
+  message.value = "Are you sure you want to delete this course? This action is irreversible.";
+  isDeleteModalOpen.value = true;
+};
+
+// Fonction pour confirmer la suppression
+const confirmDelete = async () => {
+  if (courseToDeleteId.value) {
+    await deleteCourse(courseToDeleteId.value);
+    isDeleteModalOpen.value = false; // Ferme le modal après la suppression
+    courseToDeleteId.value = null; // Réinitialise l'ID
+    await loadStore(); // Recharge les données pour mettre à jour l'affichage
+  }
 };
 
 const loadStore = async () => {

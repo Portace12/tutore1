@@ -37,6 +37,12 @@
     <ViewStudent v-model="view" :title="'View Student'" :data="viewData">
       <template #content></template>
     </ViewStudent>
+
+      <AlertModal
+      v-model="isDeleteModalOpen"
+      :message="'Are you sure you want to delete this Student? This action cannot be undone.'"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>
 
@@ -52,6 +58,7 @@ import { useFacultyStore } from "@/stores/facultyStore";
 import usePromotionStore from "@/stores/promotionStore";
 import useUserStore from "@/stores/userstore";
 import useDepartementStore from "@/stores/departementStore";
+import AlertModal from "@/components/AlertModal.vue";
 
 const studentStore = useStudentStore();
 const facultyStore = useFacultyStore();
@@ -137,11 +144,15 @@ const handleView = (data) => {
   viewData.value = data;
 };
 const idSelected = ref(null);
-
+const isDeleteModalOpen = ref(false)
 const handleDeleteStudent = async (id) => {
   idSelected.value = students.value.find((item) => item.id === id)?.id_utilisateur || null;
-  await deleteStudent(idSelected.value);
+  isDeleteModalOpen.value = true
 };
+
+const confirmDelete = async ()=>{
+    await deleteStudent(idSelected.value);
+}
 
 const refreshData = async () => {
   await Promise.all([

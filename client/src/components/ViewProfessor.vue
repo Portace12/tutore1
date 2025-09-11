@@ -84,7 +84,7 @@
               <button class="btn btn-primary" @click="openUpdate">
                 Update
               </button>
-              <button class="btn btn-error" @click="openDeleteModal">
+              <button class="btn btn-error" @click="handleDelete">
                 Delete
               </button>
             </div>
@@ -93,11 +93,16 @@
       </div>
     </div>
 
-    <!-- Passe une copie réactive des données -->
     <UpdateProfessor
       v-model="newUpdate"
       :title="'Update Professor'"
       :data="updateData"
+    />
+
+    <AlertModal
+      v-model="isDeleteModalOpen"
+      :message="deleteMessage"
+      @confirm="confirmDelete"
     />
   </div>
 </template>
@@ -105,6 +110,8 @@
 <script setup>
 import { ref, watch } from "vue";
 import UpdateProfessor from "./UpdateProfessor.vue";
+import AlertModal from "@/components/AlertModal.vue"; // Assume this path is correct
+import useProfessorStore from "@/stores/professorStore";
 
 const props = defineProps({
   modelValue: Boolean,
@@ -118,22 +125,27 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["update:modelValue"]);
-
+const emit = defineEmits(["update:modelValue", "delete"]);
+const useProfessor = useProfessorStore()
+const {deleteProfessor} = useProfessor
 const isOpen = ref(props.modelValue);
 const newUpdate = ref(false);
 
-// données clonées pour Update
+// Cloned data for Update
 const updateData = ref({});
 
-// synchroniser props <-> interne
+// State for the alert modal
+const isDeleteModalOpen = ref(false);
+const deleteMessage = ref("");
+
+// Synchronize props <-> internal
 watch(isOpen, (val) => emit("update:modelValue", val));
 watch(
   () => props.modelValue,
   (val) => (isOpen.value = val)
 );
 
-// à chaque fois que les props changent → maj du clone
+// Every time props change -> update clone
 watch(
   () => props.data,
   (val) => {
@@ -147,9 +159,21 @@ const server = "http://localhost:4000";
 const openUpdate = () => {
   isOpen.value = false;
   setTimeout(() => {
-    // recharge les données avant d’ouvrir Update
+    // Reload data before opening Update
     updateData.value = JSON.parse(JSON.stringify(props.data || {}));
     newUpdate.value = true;
   }, 300);
+};
+
+const handleDelete = () => {
+  deleteMessage.value = "Are you sure you want to delete this professor? This action is irreversible.";
+  isDeleteModalOpen.value = true;
+};
+console.log(props.data);
+
+const confirmDelete = async () => {
+  await deleteProfessor(props.data.id)
+  isDeleteModalOpen.value = false;
+  isOpen.value = false;
 };
 </script>
