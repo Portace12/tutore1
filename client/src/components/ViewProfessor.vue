@@ -16,19 +16,13 @@
           <div class="flex items-center justify-between pb-4 border-b border-base-300">
             <h2 class="text-2xl font-bold">{{ props.title }}</h2>
             <label for="drawer-viewProfessor" class="btn btn-sm btn-ghost">
-              <svg
-                class="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
                   d="M6 18L18 6M6 6l12 12"
-                ></path>
+                />
               </svg>
             </label>
           </div>
@@ -38,9 +32,7 @@
             <div class="card w-full bg-base-200 shadow-xl rounded-box p-6">
               <div class="flex flex-col items-center mb-6">
                 <div class="avatar online mb-4">
-                  <div
-                    class="w-32 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2"
-                  >
+                  <div class="w-32 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
                     <img
                       :src="`${server}/${props.data.img}`"
                       alt="user photo"
@@ -90,37 +82,9 @@
 
             <div class="flex justify-center gap-4 mt-8">
               <button class="btn btn-primary" @click="openUpdate">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
                 Update
               </button>
               <button class="btn btn-error" @click="openDeleteModal">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.013 21H7.987a2 2 0 01-1.92-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
                 Delete
               </button>
             </div>
@@ -129,9 +93,12 @@
       </div>
     </div>
 
-    <UpdateProfessor v-model="newUpdate" :title="'Update Professor'" :data="props.data || {}">
-      <template #content></template>
-    </UpdateProfessor>
+    <!-- Passe une copie réactive des données -->
+    <UpdateProfessor
+      v-model="newUpdate"
+      :title="'Update Professor'"
+      :data="updateData"
+    />
   </div>
 </template>
 
@@ -140,13 +107,9 @@ import { ref, watch } from "vue";
 import UpdateProfessor from "./UpdateProfessor.vue";
 
 const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    required: true,
-  },
+  modelValue: Boolean,
   title: {
     type: String,
-    required: true,
     default: "Title",
   },
   data: {
@@ -157,8 +120,11 @@ const props = defineProps({
 
 const emit = defineEmits(["update:modelValue"]);
 
-const isOpen = ref(props.modelValue); // état du ViewStudent
-const newUpdate = ref(false); // état du UpdateStudent
+const isOpen = ref(props.modelValue);
+const newUpdate = ref(false);
+
+// données clonées pour Update
+const updateData = ref({});
 
 // synchroniser props <-> interne
 watch(isOpen, (val) => emit("update:modelValue", val));
@@ -166,16 +132,24 @@ watch(
   () => props.modelValue,
   (val) => (isOpen.value = val)
 );
+
+// à chaque fois que les props changent → maj du clone
+watch(
+  () => props.data,
+  (val) => {
+    updateData.value = JSON.parse(JSON.stringify(val || {})); // deep clone
+  },
+  { immediate: true }
+);
+
 const server = "http://localhost:4000";
-const closeDrawer = () => {
-  isOpen.value = false;
-};
 
 const openUpdate = () => {
-  isOpen.value = false; // ferme ViewStudent
+  isOpen.value = false;
   setTimeout(() => {
-    newUpdate.value = true; // ouvre UpdateStudent
+    // recharge les données avant d’ouvrir Update
+    updateData.value = JSON.parse(JSON.stringify(props.data || {}));
+    newUpdate.value = true;
   }, 300);
 };
-
 </script>

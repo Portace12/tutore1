@@ -217,18 +217,9 @@ import usePromotionStore from "@/stores/promotionStore";
 import useDepartementStore from "@/stores/departementStore";
 
 const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    required: true,
-  },
-  title: {
-    type: String,
-    default: "Title",
-  },
-  data: {
-    type: Object,
-    required: true,
-  },
+  modelValue: Boolean,
+  title: { type: String, default: "Title" },
+  data: { type: Object, required: true },
 });
 
 const emit = defineEmits(["update:modelValue"]);
@@ -241,14 +232,12 @@ const facultyStore = useFacultyStore();
 const promotionStore = usePromotionStore();
 const departementStore = useDepartementStore();
 
-// Store states
 const { users } = storeToRefs(userStore);
 const { students } = storeToRefs(studentStore);
 const { faculties } = storeToRefs(facultyStore);
 const { promotions } = storeToRefs(promotionStore);
 const { departements } = storeToRefs(departementStore);
 
-// Store actions
 const { fetchUsers } = userStore;
 const { fetchAll: fetchAllFaculties } = facultyStore;
 const { fetchPromotions } = promotionStore;
@@ -256,7 +245,7 @@ const { fetchAllStudents, updateStudent } = studentStore;
 const { fetchDepartements } = departementStore;
 
 const formData = ref({
-  id: null, // User ID
+  id: null,
   id_student: null,
   fullname: "",
   date: "",
@@ -275,14 +264,18 @@ const promotionChoosed = ref(null);
 const newPhotoFile = ref(null);
 const photoPreview = ref(null);
 
+// 🔑 Flag pour bloquer les watch pendant init
+const isInitializing = ref(false);
+
 watch(
   () => props.data,
   (newData) => {
     if (newData) {
-      // Find the full student data from the store
+      isInitializing.value = true; // ✅ On bloque les reset
+
       const student = students.value.find((s) => s.id === newData.id);
       if (!student) {
-        console.error("Student not found in store for update:", newData.id);
+        console.error("Student not found:", newData.id);
         return;
       }
       const user = users.value.find((u) => u.id === student.id_utilisateur);
@@ -294,7 +287,6 @@ watch(
         ? faculties.value.find((f) => f.id === departement.id_faculte)
         : null;
 
-      // Fill form data
       formData.value = {
         id: user?.id || null,
         id_student: student?.id || null,
@@ -308,38 +300,36 @@ watch(
         photo: student?.photo_url || null,
       };
 
-      // Set the values for the select inputs
       facultyChoosed.value = faculty?.id || null;
       departementChoosed.value = departement?.id || null;
       promotionChoosed.value = promotion?.id || null;
 
-      // Configure photo preview
-      photoPreview.value = student?.photo_url ? `http://localhost:4000/${student.photo_url}` : null;
+      photoPreview.value = student?.photo_url
+        ? `http://localhost:4000/${student.photo_url}`
+        : null;
+
+      // ✅ On libère après une micro-task (laisser les watchers s'exécuter après coup)
+      setTimeout(() => (isInitializing.value = false), 0);
     }
   },
   { immediate: true }
 );
 
 watch(isOpen, (val) => emit("update:modelValue", val));
-watch(
-  () => props.modelValue,
-  (val) => (isOpen.value = val)
-);
+watch(() => props.modelValue, (val) => (isOpen.value = val));
 
-const closeDrawer = () => {
-  isOpen.value = false;
-};
+const closeDrawer = () => { isOpen.value = false };
 
-// Cascading select logic
+// Cascading select logic (protégé par le flag)
 watch(facultyChoosed, (newVal) => {
-  if (newVal) {
+  if (!isInitializing.value && newVal) {
     departementChoosed.value = null;
     promotionChoosed.value = null;
   }
 });
 
 watch(departementChoosed, (newVal) => {
-  if (newVal) {
+  if (!isInitializing.value && newVal) {
     promotionChoosed.value = null;
   }
 });
@@ -353,9 +343,7 @@ const handleFileChange = (event) => {
   if (file) {
     newPhotoFile.value = file;
     const reader = new FileReader();
-    reader.onload = (e) => {
-      photoPreview.value = e.target.result;
-    };
+    reader.onload = (e) => (photoPreview.value = e.target.result);
     reader.readAsDataURL(file);
   } else {
     newPhotoFile.value = null;
@@ -387,7 +375,6 @@ const handleSubmit = async () => {
 };
 
 onMounted(async () => {
-  // Fetch all necessary data when the component is mounted
   await Promise.all([
     fetchAllStudents(),
     fetchUsers(),
@@ -397,35 +384,22 @@ onMounted(async () => {
   ]);
 });
 
-// Computed properties for select options
-const selectFaculties = computed(() => {
-  return faculties.value.map((item) => ({
-    value: item.id,
-    label: item.nom_faculte.toUpperCase(),
-  }));
-});
-
-const selectDepartement = computed(() => {
-  if (facultyChoosed.value) {
-    return departements.value
-      .filter((dep) => dep.id_faculte === facultyChoosed.value)
-      .map((item) => ({
-        value: item.id,
-        label: item.nom_departement.toUpperCase(),
-      }));
-  }
-  return [];
-});
-
-const selectPromotion = computed(() => {
-  if (departementChoosed.value) {
-    return promotions.value
-      .filter((prom) => prom.id_departement === departementChoosed.value)
-      .map((item) => ({
-        value: item.id,
-        label: item.nom_promotion,
-      }));
-  }
-  return [];
-});
+// Options
+const selectFaculties = computed(() =>
+  faculties.value.map((f) => ({ value: f.id, label: f.nom_faculte.toUpperCase() }))
+);
+const selectDepartement = computed(() =>
+  facultyChoosed.value
+    ? departements.value
+        .filter((d) => d.id_faculte === facultyChoosed.value)
+        .map((d) => ({ value: d.id, label: d.nom_departement.toUpperCase() }))
+    : []
+);
+const selectPromotion = computed(() =>
+  departementChoosed.value
+    ? promotions.value
+        .filter((p) => p.id_departement === departementChoosed.value)
+        .map((p) => ({ value: p.id, label: p.nom_promotion }))
+    : []
+);
 </script>
