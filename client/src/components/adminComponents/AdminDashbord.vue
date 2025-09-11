@@ -57,14 +57,20 @@ import { storeToRefs } from "pinia";
 import { useFacultyStore } from "@/stores/facultyStore";
 import { onMounted } from "vue";
 import useStudentStore from "@/stores/studentStore";
+import { useCourseStore } from "@/stores/courseStore";
 
 const useProfessor = useProfessorStore();
 const { professors } = storeToRefs(useProfessor);
+const { fetchAll: fetchAllProfessors } = useProfessor;
 const useFaculty = useFacultyStore();
 const { faculties } = storeToRefs(useFaculty);
+const { fetchAll: fetchAllFaculties } = useFaculty;
 const useStudent = useStudentStore();
 const { students } = storeToRefs(useStudent);
 const { fetchAllStudents } = useStudent;
+const useCourse = useCourseStore();
+const { courses } = storeToRefs(useCourse);
+const { fetchAllCourses } = useCourse;
 // Ajout des données de cartes de statistiques pour utiliser v-for
 const statsCards = [
   {
@@ -91,13 +97,16 @@ const statsCards = [
   {
     title: "Courses",
     icon: "mdi-book-open",
-    value: "30",
+    value: courses.value.length,
     color: "bg-green-50",
     class: "bg-green-300 hover:bg-green-400",
   },
 ];
 onMounted(async () => {
   await fetchAllStudents;
+  await fetchAllCourses;
+  await fetchAllFaculties
+  await fetchAllProfessors
 });
 </script>
 

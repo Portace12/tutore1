@@ -287,8 +287,12 @@ watch(
       }
       const user = users.value.find((u) => u.id === student.id_utilisateur);
       const promotion = promotions.value.find((p) => p.id === student.id_promotion);
-      const departement = promotion ? departements.value.find((d) => d.id === promotion.id_departement) : null;
-      const faculty = departement ? faculties.value.find((f) => f.id === departement.id_faculte) : null;
+      const departement = promotion
+        ? departements.value.find((d) => d.id === promotion.id_departement)
+        : null;
+      const faculty = departement
+        ? faculties.value.find((f) => f.id === departement.id_faculte)
+        : null;
 
       // Fill form data
       formData.value = {
