@@ -125,6 +125,7 @@ const props = defineProps({
   },
 });
 
+
 const emit = defineEmits(["update:modelValue", "delete"]);
 const useProfessor = useProfessorStore()
 const {deleteProfessor} = useProfessor
@@ -169,7 +170,7 @@ const handleDelete = () => {
   deleteMessage.value = "Are you sure you want to delete this professor? This action is irreversible.";
   isDeleteModalOpen.value = true;
 };
-console.log(props.data);
+console.log("id",props.data.id);
 
 const confirmDelete = async () => {
   await deleteProfessor(props.data.id)
