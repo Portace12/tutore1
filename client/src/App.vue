@@ -40,19 +40,3 @@ onMounted(() => {
   }
 });
 </script>
-
-<style>
-/* Importez la police Inter et les icônes Material Design.
-  Assurez-vous que 'vue-material-design-icons' est installé dans votre projet :
-  npm install vue-material-design-icons
-  ou
-  yarn add vue-material-design-icons
-*/
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-/* Si vous utilisez les icônes via des classes CSS (moins recommandé pour Vue), décommentez ceci : */
-/* @import url('https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css'); */
-
-body {
-  font-family: "Inter", sans-serif;
-}
-</style>

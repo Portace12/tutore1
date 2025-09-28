@@ -11,6 +11,7 @@ import Calculation from "@/pages/admin/Calculation.vue";
 import FacultyDetail from "@/pages/admin/FacultyDetail.vue";
 import DepartementDetail from "@/pages/admin/DepartementDetail.vue";
 import PromotionDetail from "@/pages/admin/PromotionDetail.vue";
+import TypeManagement from "@/pages/admin/TypeManagement.vue";
 
 const routes = [
   {
@@ -81,6 +82,12 @@ const routes = [
     component: Calculation,
     name: "Calculation",
     meta: { requiresAuth: true },
+  },
+  {
+    path: "/calculation/type",
+    component: TypeManagement,
+    name: "Type",
+    meta: { requiredAuth: true }
   },
   {
     path: "/announce",

@@ -245,9 +245,6 @@ const handleDeleteStudent = async (id) => {
   isDeleteModalOpen.value = true;
 };
 
-console.log(props.data);
-
-
 const confirmDelete = async () => {
   await deleteStudent(idSelected.value);
   closeDrawer();

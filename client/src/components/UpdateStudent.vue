@@ -275,7 +275,6 @@ watch(
 
       const student = students.value.find((s) => s.id === newData.id);
       if (!student) {
-        console.error("Student not found:", newData.id);
         return;
       }
       const user = users.value.find((u) => u.id === student.id_utilisateur);

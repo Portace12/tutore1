@@ -12,7 +12,7 @@
       <table class="table w-full bg-base-100 rounded shadow-sm">
         <thead>
           <tr class="bg-base-300 rounded">
-            <th v-if="otherComponent">
+            <th>
               <label>
                 <input
                   type="checkbox"
@@ -35,7 +35,7 @@
             :key="student.id"
             class="hover:bg-base-300"
           >
-            <th v-if="otherComponent">
+            <th>
               <label>
                 <input
                   type="checkbox"
@@ -92,7 +92,10 @@
                     </button>
                   </li>
                   <li>
-                    <button class="btn btn-ghost w-full flex items-center gap-2 text-error" @click="handleDelete(student.id)">
+                    <button
+                      class="btn btn-ghost w-full flex items-center gap-2 text-error"
+                      @click="handleDelete(student.id)"
+                    >
                       <v-icon>mdi-delete</v-icon>
                       <p>Delete</p>
                     </button>
@@ -113,6 +116,13 @@
               </p>
             </div>
             <div class="flex items-center gap-2 pr-4 border-r border-base-content/20">
+              <button
+                class="btn btn-ghost btn-sm hover:bg-blue-600"
+                @click.prevent="actionPanel(studentSelected)"
+              >
+                <v-icon>mdi-folder</v-icon>
+                <p>Action</p>
+              </button>
               <button class="btn btn-ghost btn-sm hover:bg-red-600">
                 <v-icon>mdi-delete</v-icon>
                 <p>Remove</p>
@@ -157,7 +167,7 @@ const props = defineProps({
   },
 });
 
-const server = 'http://localhost:4000'
+const server = "http://localhost:4000";
 
 const studentSelected = ref([]);
 
@@ -199,7 +209,7 @@ const filteredStudents = computed(() => {
     });
   });
 });
-const emit = defineEmits(["open", "view", "delete"]);
+const emit = defineEmits(["open", "view", "delete", "action"]);
 const closeDropdown = () => {
   const dropdownToggle = document.getElementById("my-dropdown-toggle");
   if (dropdownToggle) {
@@ -218,8 +228,14 @@ const handleClickView = (item) => {
   emit("view", data);
 };
 
-const handleDelete = (item)=>{
-  const data = item
-  emit('delete', data)
-}
+const handleDelete = (item) => {
+  const data = item;
+  emit("delete", data);
+};
+
+const actionPanel = (item) => {
+  const data = item;
+  emit("action", data);
+  clearSelection()
+};
 </script>

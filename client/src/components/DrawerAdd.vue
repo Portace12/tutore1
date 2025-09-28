@@ -215,7 +215,7 @@
                   >
                     <option disabled selected>Choose a gender</option>
                     <option>Man</option>
-                    <option>Woman</option>
+                    <option>Women</option>
                     <option>Private</option>
                   </select>
                 </div>

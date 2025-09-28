@@ -11,6 +11,7 @@ import { fileURLToPath } from "url";
 import userRoutes from './Routes/userRoute.js'
 import studentRoutes from './Routes/studentRoutes.js'
 import courseRoutes from './Routes/courseRoute.js'
+import typeRoutes from './Routes/typeRoute.js'
 
 const app = express()
 app.use(express.json())
@@ -28,6 +29,7 @@ app.use('/api/promotion', promotionRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/student', studentRoutes)
 app.use('/api/course', courseRoutes)
+app.use('/api/type', typeRoutes)
 
 
 app.get('/', (req, res) => {
@@ -43,6 +45,7 @@ export const db = mysql.createPool({
 
 db.getConnection()
   .then(connection => {
+    
     console.log('Connexion à la base de données réussie.');
     connection.release();
   })

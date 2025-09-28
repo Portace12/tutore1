@@ -41,11 +41,16 @@
         <li>
           <router-link
             to="/"
-            active-class="bg-blue-500 text-primary-content"
-            class="flex items-center rounded-box py-2 px-4 transition-colors duration-200 ease-in-out hover:bg-blue-600 active:bg-blue-500"
-            :class="{ 'justify-center': !width, 'gap-2': width }"
+            :class="[
+              'flex items-center rounded-box py-2 px-4 transition-colors duration-200 ease-in-out hover:bg-blue-600 active:bg-blue-500',
+              {
+                'bg-blue-500 text-primary-content': isActive('/'),
+                'justify-center': !width,
+                'gap-2': width,
+              },
+            ]"
           >
-            <v-icon class="text-xl">mdi-home</v-icon>
+            <v-icon class="text-xl" :class="{ '': isActive('/') }"> mdi-home </v-icon>
             <p v-if="width">Home</p>
           </router-link>
         </li>
@@ -55,11 +60,16 @@
         <li v-for="value in sidebarContent" :key="value.title">
           <router-link
             :to="value.link"
-            active-class="bg-blue-500 text-primary-content"
-            class="flex items-center rounded-box py-2 px-4 transition-colors duration-200 ease-in-out hover:bg-blue-600 active:bg-blue-500"
-            :class="{ 'justify-center': !width, 'gap-2': width }"
+            :class="[
+              'flex items-center rounded-box py-2 px-4 transition-colors duration-200 ease-in-out hover:bg-blue-600 active:bg-blue-500',
+              {
+                'bg-blue-500 text-primary-content': isActive(value.link),
+                'justify-center': !width,
+                'gap-2': width,
+              },
+            ]"
           >
-            <v-icon>{{ value.icon }}</v-icon>
+            <v-icon :class="{ '': isActive(value.link) }">{{ value.icon }}</v-icon>
             <p v-if="width">{{ value.title }}</p>
           </router-link>
         </li>
@@ -71,7 +81,10 @@
 <script setup>
 import { sidebarContent } from "@/constant";
 import { computed, ref } from "vue";
+import { useRoute } from "vue-router";
+
 const emit = defineEmits(["toggle-theme"]);
+const route = useRoute();
 
 const isLightMode = computed(() => {
   return document.documentElement.getAttribute("data-theme") === "light";
@@ -80,5 +93,14 @@ const isLightMode = computed(() => {
 const width = ref(false);
 const menu = () => {
   width.value = !width.value;
+};
+
+const isActive = (link) => {
+  // Gère la route 'home' qui est juste '/'
+  if (link === "/") {
+    return route.path === "/";
+  }
+  // Gère les autres routes comme '/faculty' ou '/faculty/123'
+  return route.path === link || route.path.startsWith(link + "/");
 };
 </script>
