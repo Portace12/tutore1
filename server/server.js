@@ -12,6 +12,7 @@ import userRoutes from './Routes/userRoute.js'
 import studentRoutes from './Routes/studentRoutes.js'
 import courseRoutes from './Routes/courseRoute.js'
 import typeRoutes from './Routes/typeRoute.js'
+import resultatRoutes from './Routes/resultatRoute.js';
 
 const app = express()
 app.use(express.json())
@@ -30,6 +31,7 @@ app.use('/api/user', userRoutes)
 app.use('/api/student', studentRoutes)
 app.use('/api/course', courseRoutes)
 app.use('/api/type', typeRoutes)
+app.use('/api/resultats', resultatRoutes);
 
 
 app.get('/', (req, res) => {
