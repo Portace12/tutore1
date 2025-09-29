@@ -240,9 +240,8 @@
     </div>
   </div>
 </template>
-
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useFacultyStore } from "@/stores/facultyStore";
 import useDepartementStore from "@/stores/departementStore";
@@ -294,7 +293,7 @@ const filteredPromotions = computed(() =>
 
 const getMention = (pourcentage) => {
   if (pourcentage === null || pourcentage === undefined) return "N/V";
-  if (pourcentage >= 85) return "🌟 Very Godd";
+  if (pourcentage >= 85) return "🌟 Very Good";
   if (pourcentage >= 70) return "✅ Good";
   if (pourcentage >= 50) return "☑️ Middling";
   return "❌ Faillure";
@@ -336,8 +335,27 @@ const onPromotionChange = async () => {
     });
 };
 
-// --- LOGIQUE DES BARRES DE PROGRESSION ---
+// --- NOUVELLE LOGIQUE LOCAL STORAGE ---
 
+/**
+ * Enregistre les progrès de promotion, département et faculté dans le localStorage.
+ */
+const saveProgressToLocalStorage = () => {
+  try {
+    const progressData = {
+      promotion: promotionProgress.value,
+      department: departmentProgress.value,
+      faculty: facultyProgress.value,
+      timestamp: Date.now(), // Pour savoir quand cela a été mis à jour
+    };
+    localStorage.setItem("gradingProgress", JSON.stringify(progressData));
+    // console.log("Progress saved to localStorage:", progressData);
+  } catch (e) {
+    console.error("Error saving progress to localStorage:", e);
+  }
+};
+
+// Fonction utilitaire pour vérifier si une promotion est complétée
 const isPromotionCompleted = (promoId) => {
   if (!Array.isArray(resultat.value)) return false;
 
@@ -354,6 +372,8 @@ const isPromotionCompleted = (promoId) => {
 
   return studentsWithResult === totalStudents;
 };
+
+// --- LOGIQUE DES BARRES DE PROGRESSION (avec watch pour localStorage) ---
 
 const promotionProgress = computed(() => {
   const total = studentsWithResults.value.length;
@@ -399,7 +419,88 @@ const facultyProgress = computed(() => {
   return { percent, completed: completedDepts, total: totalDepts };
 });
 
-// --- Gestion Modal ---
+// Watchers pour enregistrer les progressions globales à chaque changement.
+// On surveille le `resultat` global du store pour s'assurer que les progrès
+// sont enregistrés dès qu'un nouveau résultat est sauvegardé.
+watch(
+  [resultat, promotions, departements, students],
+  () => {
+    // Cette fonction est appelée si l'une des dépendances change,
+    // ce qui indique que les calculs de progression pourraient être mis à jour.
+    // On force l'accès aux computed pour s'assurer qu'elles sont évaluées.
+    if (resultat.value.length > 0) {
+        // Déclencher une re-évaluation et enregistrer les données globales
+        // Nous allons faire un calcul simple qui englobe toutes les données.
+
+        let allPromotionsTotal = 0;
+        let allPromotionsCompleted = 0;
+
+        promotions.value.forEach(p => {
+            allPromotionsTotal++;
+            if(isPromotionCompleted(p.id)){
+                allPromotionsCompleted++;
+            }
+        });
+
+        // Calcul des progrès globaux
+        const globalPromotionProgress = {
+            completed: allPromotionsCompleted,
+            total: allPromotionsTotal,
+            percent: allPromotionsTotal > 0 ? (allPromotionsCompleted / allPromotionsTotal) * 100 : 0
+        };
+
+        let allDepartmentsTotal = departements.value.length;
+        let allDepartmentsCompleted = departements.value.filter(dept => {
+            const promosInDept = promotions.value.filter((p) => p.id_departement === dept.id);
+            if (promosInDept.length === 0) return true;
+            return promosInDept.every((p) => isPromotionCompleted(p.id));
+        }).length;
+
+        const globalDepartmentProgress = {
+            completed: allDepartmentsCompleted,
+            total: allDepartmentsTotal,
+            percent: allDepartmentsTotal > 0 ? (allDepartmentsCompleted / allDepartmentsTotal) * 100 : 0
+        };
+
+        let allFacultiesTotal = faculties.value.length;
+        let allFacultiesCompleted = faculties.value.filter(fac => {
+            const deptsInFaculty = departements.value.filter((d) => d.id_faculte === fac.id);
+            if (deptsInFaculty.length === 0) return true;
+
+            return deptsInFaculty.every(dept => {
+                const promosInDept = promotions.value.filter((p) => p.id_departement === dept.id);
+                if (promosInDept.length === 0) return true;
+                return promosInDept.every((p) => isPromotionCompleted(p.id));
+            });
+        }).length;
+
+        const globalFacultyProgress = {
+            completed: allFacultiesCompleted,
+            total: allFacultiesTotal,
+            percent: allFacultiesTotal > 0 ? (allFacultiesCompleted / allFacultiesTotal) * 100 : 0
+        };
+
+
+        // Enregistrement des progrès globaux dans le localStorage
+        try {
+            const progressData = {
+                promotion: globalPromotionProgress,
+                department: globalDepartmentProgress,
+                faculty: globalFacultyProgress,
+                timestamp: Date.now(),
+            };
+            localStorage.setItem("gradingProgress", JSON.stringify(progressData));
+            // console.log("Global Progress saved to localStorage:", progressData);
+        } catch (e) {
+            console.error("Error saving global progress to localStorage:", e);
+        }
+    }
+  },
+  { deep: true, immediate: false }
+);
+
+// --- Gestion Modal (le reste du code modal reste inchangé) ---
+
 const openStudentModal = async (student) => {
   currentStudent.value = JSON.parse(JSON.stringify(student));
   const globalResult = await resultatStore.fetchResultatsByEtudiant(student.id);
@@ -476,27 +577,24 @@ const loadCurrentCourseDetails = () => {
   calculateCourseResult(currentCourse);
 };
 
-// --- Fonctions de Calcul ---
+// --- Fonctions de Calcul (inchangées) ---
 const calculateContribution = (typeAssoc) => {
   const note = notesForCurrentCourse.value[typeAssoc.id_association];
   const noteInput = typeof note === "number" && !isNaN(note) ? note : 0;
   return (noteInput / typeAssoc.max_note) * typeAssoc.ponderation;
 };
 
-// CORRECTION CRITIQUE APPORTÉE ICI
 const calculateCourseResult = (course) => {
   let sumWeightedContributions = 0;
-  let totalPonderation = 0; // Somme de la pondération totale possible pour le cours
+  let totalPonderation = 0;
 
   currentCourseAssociations.value.forEach((a) => {
     const note = notesForCurrentCourse.value[a.id_association];
 
-    // 1. Calculer la contribution uniquement si la note est entrée
     if (typeof note === "number" && !isNaN(note)) {
       sumWeightedContributions += calculateContribution(a);
     }
 
-    // 2. Accumuler la pondération totale du cours pour le dénominateur
     totalPonderation += a.ponderation;
   });
 
@@ -505,7 +603,6 @@ const calculateCourseResult = (course) => {
     return;
   }
 
-  // Normalisation: Diviser la contribution réelle par la pondération totale du cours, et multiplier par 100
   const finalPercentage = (sumWeightedContributions / totalPonderation) * 100;
 
   course.finalGrade = finalPercentage;
@@ -560,7 +657,6 @@ const saveStudentResults = async () => {
   for (const course of coursesForStudent.value) {
     const notesStructure = currentStudent.value.notes[course.id] || {};
     let shouldSendResult = false;
-    // courseFinalGrade est maintenant un pourcentage correctement calculé (0 à 100)
     let courseFinalGrade = notesStructure.finalGrade || 0;
     const allCourseAssocs = associationTypes.value.filter((a) => a.id_cours === course.id);
     const evaluations = [];
@@ -597,12 +693,8 @@ const saveStudentResults = async () => {
     return;
   }
 
-  // 1. Calcul de la moyenne générale en pourcentage
-  const finalPourcentage = totalPourcentageAnnuel / countedCourses; // Moyenne des pourcentages des cours notés
-
-  // 2. Conversion de cette moyenne sur 600
+  const finalPourcentage = totalPourcentageAnnuel / countedCourses;
   const maxNoteAnnuelle = 600;
-  // Utilisation de la moyenne en pourcentage pour obtenir la note sur 600
   const finalNote600 = (finalPourcentage / 100) * maxNoteAnnuelle;
 
   const resultatFinal = {
@@ -620,6 +712,7 @@ const saveStudentResults = async () => {
     if (studentIndex !== -1) {
       studentsWithResults.value[studentIndex].finalGrade = finalPourcentage;
     }
+    // Mise à jour de la liste et déclenchement du watch pour enregistrer les progrès globaux
     await onPromotionChange();
     closeModal();
   } catch (error) {
