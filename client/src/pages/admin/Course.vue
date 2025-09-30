@@ -58,12 +58,17 @@
           <p class="text-sm text-gray-500">
             <span class="font-semibold">Students :</span> {{ course.student }}
           </p>
+          <p class="text-sm text-gray-500">
+            <span class="font-semibold">Credit :</span> {{ course.credit }}
+          </p>
           <div class="badge badge-outline mt-2">
             {{ `${course.departement.toUpperCase()} / ${course.promotion.toUpperCase()}` }}
           </div>
           <div class="card-actions justify-end mt-4">
             <button class="btn btn-primary btn-sm" @click="openViewModal(course)">View</button>
-            <button class="btn btn-accent btn-sm" @click="openUpdateModal(course.id)">Update</button>
+            <button class="btn btn-accent btn-sm" @click="openUpdateModal(course.id)">
+              Update
+            </button>
             <button class="btn btn-error btn-sm" @click="handleDelete(course.id)">Delete</button>
           </div>
         </div>
@@ -91,11 +96,7 @@
     <UpdateCourse v-model="isUpdateModalOpen" title="Update Course" :idCours="selectedCourse" />
     <ViewCourse v-model="isViewModalopen" title="View Course" :data="viewCourse" />
 
-    <AlertModal
-      v-model="isDeleteModalOpen"
-      :message="message"
-      @confirm="confirmDelete"
-    />
+    <AlertModal v-model="isDeleteModalOpen" :message="message" @confirm="confirmDelete" />
   </div>
 </template>
 
@@ -194,6 +195,7 @@ const dataFormated = computed(() => {
       student: nbrStu.length,
       departement: departement ? departement.nom_departement : "Not available",
       promotion: promotion ? promotion.nom_promotion : null,
+      credit:cs.credit
     };
   });
 });
