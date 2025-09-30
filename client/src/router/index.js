@@ -12,6 +12,7 @@ import FacultyDetail from "@/pages/admin/FacultyDetail.vue";
 import DepartementDetail from "@/pages/admin/DepartementDetail.vue";
 import PromotionDetail from "@/pages/admin/PromotionDetail.vue";
 import TypeManagement from "@/pages/admin/TypeManagement.vue";
+import AdminProfile from "@/pages/admin/AdminProfile.vue";
 
 const routes = [
   {
@@ -75,6 +76,12 @@ const routes = [
     path: "/course",
     component: Course,
     name: "Course",
+    meta: { requiresAuth: true },
+  },
+    {
+    path: "/admin/profile",
+    component: AdminProfile,
+    name: "AdminProfil",
     meta: { requiresAuth: true },
   },
   {

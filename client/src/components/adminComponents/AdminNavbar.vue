@@ -6,9 +6,8 @@
     <div class="flex items-center justify-between space-x-6">
       <div class="flex space-x-5 items-center justify-center">
         <div class="w-10 rounded-full">
-          <img :src="country" class="rounded shadow cursor-pointer transition-all hover:scale-125"/>
+          <img :src="country" class="rounded shadow cursor-pointer transition-all"/>
         </div>
-        <v-icon class="cursor-pointer">mdi-bell</v-icon>
       </div>
       <div class="dropdown dropdown-end">
         <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
@@ -20,7 +19,7 @@
           tabindex="0"
           class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
         >
-          <li><a>Profile</a></li>
+          <li><router-link to="/admin/profile">Profile</router-link></li>
           <li><a>Settings</a></li>
           <li><a>Logout</a></li>
         </ul>

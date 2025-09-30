@@ -37,7 +37,7 @@
       >
         <option disabled value="">🎒 Select Promotion</option>
         <option v-for="p in filteredPromotions" :key="p.id" :value="p.id">
-          {{ p.nom_promotion }}
+          {{ `${p.nom_promotion} - ${p.annee}`}}
         </option>
       </select>
 
@@ -108,11 +108,12 @@
       <table class="table w-full">
         <thead>
           <tr class="bg-base-300 text-sm uppercase tracking-wide">
-            <th>👤 Name</th>
-            <th>📄 Gender</th>
+            <th> Name</th>
             <th>Final %</th>
-            <th>Mention</th>
-            <th class="text-center">⚙️ Action</th>
+            <th>Rank</th>
+            <th class="text-center"> Validate credit</th>
+            <th class="text-center"> All validate</th>
+            <th class="text-center"> Action</th>
           </tr>
         </thead>
         <tbody>
@@ -122,7 +123,6 @@
             class="hover:bg-base-200 transition"
           >
             <td class="font-semibold">{{ student.nom }}</td>
-            <td>{{ student.genre }}</td>
             <td>
               <span
                 v-if="student.finalGrade !== null"
@@ -144,9 +144,17 @@
                 {{ getMention(student.finalGrade) }}
               </span>
             </td>
+            <td class="text-center font-bold text-info">
+              {{ student.credits_valides !== undefined ? student.credits_valides : 'N/A' }}
+            </td>
+            <td class="text-center">
+              <div :class="['badge badge-sm font-bold', student.validation_globale ? 'badge-success' : 'badge-error']">
+                {{ student.validation_globale ? 'V' : 'NV' }}
+              </div>
+            </td>
             <td class="text-center">
               <button @click="openStudentModal(student)" class="btn btn-sm btn-primary rounded-xl">
-                📝 Enter Grades
+                 Enter Grades
               </button>
             </td>
           </tr>
@@ -163,12 +171,17 @@
         class="bg-base-100 p-6 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl"
       >
         <h3 class="text-2xl font-bold mb-6 text-primary">
-          📝 Grade Entry - {{ currentStudent.nom }}
+           Grade Entry - {{ currentStudent.nom }}
         </h3>
 
         <div class="mb-6">
           <div class="flex justify-between text-sm mb-1">
-            <span class="font-medium text-blue-600">Course: {{ currentCourse.cours }}</span>
+            <span class="font-medium text-blue-600">
+                Course: {{ currentCourse.cours || 'N/A' }}
+                <span v-if="currentCourse.credit" class="badge badge-info badge-sm ml-2">
+                    {{ currentCourse.credit }} Crédits
+                </span>
+            </span>
             <small>{{ currentCourseIndex + 1 }} / {{ coursesForStudent.length }}</small>
           </div>
           <progress
@@ -212,6 +225,12 @@
               </tr>
             </tbody>
           </table>
+          <p class="mt-4 text-sm font-bold">Final Rating of this course:
+            <span :class="{'text-success': currentCourse.finalGrade >= 50, 'text-error': currentCourse.finalGrade < 50}">
+                {{ currentCourse.finalGrade.toFixed(2) }}%
+            </span>
+            ({{ currentCourse.finalGrade >= 50 ? 'V' : 'NV' }})
+          </p>
         </div>
 
         <div class="flex justify-between mt-6">
@@ -220,7 +239,7 @@
             :disabled="currentCourseIndex === 0"
             class="btn btn-sm btn-ghost rounded-xl"
           >
-            ⬅️ Previous
+             Previous
           </button>
           <div class="flex gap-3">
             <button
@@ -228,12 +247,12 @@
               @click="nextCourse"
               class="btn btn-sm btn-primary rounded-xl"
             >
-              Next ➡️
+              Next
             </button>
             <button v-else @click="saveStudentResults" class="btn btn-sm btn-success rounded-xl">
-              💾 Save & Close
+               Save & Close
             </button>
-            <button @click="closeModal" class="btn btn-sm btn-error rounded-xl">❌ Cancel</button>
+            <button @click="closeModal" class="btn btn-sm btn-error rounded-xl"> Cancel</button>
           </div>
         </div>
       </div>
@@ -266,7 +285,7 @@ const { fetchAllResult } = resultatStore;
 const selectedFaculty = ref("");
 const selectedDepartment = ref("");
 const selectedPromotion = ref("");
-const studentsWithResults = ref([]);
+const studentsWithResults = ref([]); // Maintenant enrichi avec `credits_valides` et `validation_globale`
 
 const showModal = ref(false);
 const currentStudent = ref(null);
@@ -292,11 +311,12 @@ const filteredPromotions = computed(() =>
 );
 
 const getMention = (pourcentage) => {
-  if (pourcentage === null || pourcentage === undefined) return "N/V";
-  if (pourcentage >= 85) return "🌟 Very Good";
-  if (pourcentage >= 70) return "✅ Good";
-  if (pourcentage >= 50) return "☑️ Middling";
-  return "❌ Faillure";
+  if (pourcentage >= 90) return "A";
+  if (pourcentage >= 80) return "B";
+  if (pourcentage >= 70) return "C";
+  if (pourcentage >= 60) return "D";
+  if (pourcentage >= 50) return "E";
+  return "F"; // Échec (Fail)
 };
 
 const onFacultyChange = () => {
@@ -325,37 +345,23 @@ const onPromotionChange = async () => {
 
       const res = currentResults.find((r) => r.id_etudiant === s.id);
       const finalGrade = res ? parseFloat(res.pourcentage_final) : null;
+      // NOUVEAUX CHAMPS DU RESULTAT GLOBAL
+      const creditsValides = res ? parseFloat(res.credits_valides) : undefined;
+      const validationGlobale = res ? res.validation_globale : false;
 
       return {
         ...s,
         matricule,
         finalGrade: finalGrade,
         notes: {},
+        credits_valides: creditsValides,
+        validation_globale: validationGlobale,
       };
     });
 };
 
-// --- NOUVELLE LOGIQUE LOCAL STORAGE ---
+// --- LOGIQUE DE PROGRESSION ET WATCHERS (inchangée) ---
 
-/**
- * Enregistre les progrès de promotion, département et faculté dans le localStorage.
- */
-const saveProgressToLocalStorage = () => {
-  try {
-    const progressData = {
-      promotion: promotionProgress.value,
-      department: departmentProgress.value,
-      faculty: facultyProgress.value,
-      timestamp: Date.now(), // Pour savoir quand cela a été mis à jour
-    };
-    localStorage.setItem("gradingProgress", JSON.stringify(progressData));
-    // console.log("Progress saved to localStorage:", progressData);
-  } catch (e) {
-    console.error("Error saving progress to localStorage:", e);
-  }
-};
-
-// Fonction utilitaire pour vérifier si une promotion est complétée
 const isPromotionCompleted = (promoId) => {
   if (!Array.isArray(resultat.value)) return false;
 
@@ -372,8 +378,6 @@ const isPromotionCompleted = (promoId) => {
 
   return studentsWithResult === totalStudents;
 };
-
-// --- LOGIQUE DES BARRES DE PROGRESSION (avec watch pour localStorage) ---
 
 const promotionProgress = computed(() => {
   const total = studentsWithResults.value.length;
@@ -420,86 +424,75 @@ const facultyProgress = computed(() => {
 });
 
 // Watchers pour enregistrer les progressions globales à chaque changement.
-// On surveille le `resultat` global du store pour s'assurer que les progrès
-// sont enregistrés dès qu'un nouveau résultat est sauvegardé.
 watch(
   [resultat, promotions, departements, students],
   () => {
-    // Cette fonction est appelée si l'une des dépendances change,
-    // ce qui indique que les calculs de progression pourraient être mis à jour.
-    // On force l'accès aux computed pour s'assurer qu'elles sont évaluées.
     if (resultat.value.length > 0) {
-        // Déclencher une re-évaluation et enregistrer les données globales
-        // Nous allons faire un calcul simple qui englobe toutes les données.
+      let allPromotionsTotal = 0;
+      let allPromotionsCompleted = 0;
 
-        let allPromotionsTotal = 0;
-        let allPromotionsCompleted = 0;
-
-        promotions.value.forEach(p => {
-            allPromotionsTotal++;
-            if(isPromotionCompleted(p.id)){
-                allPromotionsCompleted++;
-            }
-        });
-
-        // Calcul des progrès globaux
-        const globalPromotionProgress = {
-            completed: allPromotionsCompleted,
-            total: allPromotionsTotal,
-            percent: allPromotionsTotal > 0 ? (allPromotionsCompleted / allPromotionsTotal) * 100 : 0
-        };
-
-        let allDepartmentsTotal = departements.value.length;
-        let allDepartmentsCompleted = departements.value.filter(dept => {
-            const promosInDept = promotions.value.filter((p) => p.id_departement === dept.id);
-            if (promosInDept.length === 0) return true;
-            return promosInDept.every((p) => isPromotionCompleted(p.id));
-        }).length;
-
-        const globalDepartmentProgress = {
-            completed: allDepartmentsCompleted,
-            total: allDepartmentsTotal,
-            percent: allDepartmentsTotal > 0 ? (allDepartmentsCompleted / allDepartmentsTotal) * 100 : 0
-        };
-
-        let allFacultiesTotal = faculties.value.length;
-        let allFacultiesCompleted = faculties.value.filter(fac => {
-            const deptsInFaculty = departements.value.filter((d) => d.id_faculte === fac.id);
-            if (deptsInFaculty.length === 0) return true;
-
-            return deptsInFaculty.every(dept => {
-                const promosInDept = promotions.value.filter((p) => p.id_departement === dept.id);
-                if (promosInDept.length === 0) return true;
-                return promosInDept.every((p) => isPromotionCompleted(p.id));
-            });
-        }).length;
-
-        const globalFacultyProgress = {
-            completed: allFacultiesCompleted,
-            total: allFacultiesTotal,
-            percent: allFacultiesTotal > 0 ? (allFacultiesCompleted / allFacultiesTotal) * 100 : 0
-        };
-
-
-        // Enregistrement des progrès globaux dans le localStorage
-        try {
-            const progressData = {
-                promotion: globalPromotionProgress,
-                department: globalDepartmentProgress,
-                faculty: globalFacultyProgress,
-                timestamp: Date.now(),
-            };
-            localStorage.setItem("gradingProgress", JSON.stringify(progressData));
-            // console.log("Global Progress saved to localStorage:", progressData);
-        } catch (e) {
-            console.error("Error saving global progress to localStorage:", e);
+      promotions.value.forEach(p => {
+        allPromotionsTotal++;
+        if(isPromotionCompleted(p.id)){
+          allPromotionsCompleted++;
         }
+      });
+
+      const globalPromotionProgress = {
+        completed: allPromotionsCompleted,
+        total: allPromotionsTotal,
+        percent: allPromotionsTotal > 0 ? (allPromotionsCompleted / allPromotionsTotal) * 100 : 0
+      };
+
+      let allDepartmentsTotal = departements.value.length;
+      let allDepartmentsCompleted = departements.value.filter(dept => {
+        const promosInDept = promotions.value.filter((p) => p.id_departement === dept.id);
+        if (promosInDept.length === 0) return true;
+        return promosInDept.every((p) => isPromotionCompleted(p.id));
+      }).length;
+
+      const globalDepartmentProgress = {
+        completed: allDepartmentsCompleted,
+        total: allDepartmentsTotal,
+        percent: allDepartmentsTotal > 0 ? (allDepartmentsCompleted / allDepartmentsTotal) * 100 : 0
+      };
+
+      let allFacultiesTotal = faculties.value.length;
+      let allFacultiesCompleted = faculties.value.filter(fac => {
+        const deptsInFaculty = departements.value.filter((d) => d.id_faculte === fac.id);
+        if (deptsInFaculty.length === 0) return true;
+
+        return deptsInFaculty.every(dept => {
+          const promosInDept = promotions.value.filter((p) => p.id_departement === dept.id);
+          if (promosInDept.length === 0) return true;
+          return promosInDept.every((p) => isPromotionCompleted(p.id));
+        });
+      }).length;
+
+      const globalFacultyProgress = {
+        completed: allFacultiesCompleted,
+        total: allFacultiesTotal,
+        percent: allFacultiesTotal > 0 ? (allFacultiesCompleted / allFacultiesTotal) * 100 : 0
+      };
+
+
+      try {
+        const progressData = {
+          promotion: globalPromotionProgress,
+          department: globalDepartmentProgress,
+          faculty: globalFacultyProgress,
+          timestamp: Date.now(),
+        };
+        localStorage.setItem("gradingProgress", JSON.stringify(progressData));
+      } catch (e) {
+        console.error("Error saving global progress to localStorage:", e);
+      }
     }
   },
   { deep: true, immediate: false }
 );
 
-// --- Gestion Modal (le reste du code modal reste inchangé) ---
+// --- Gestion Modal (Mise à jour pour inclure les crédits dans le chargement) ---
 
 const openStudentModal = async (student) => {
   currentStudent.value = JSON.parse(JSON.stringify(student));
@@ -532,17 +525,20 @@ const openStudentModal = async (student) => {
 
   coursesForStudent.value = courses.value
     .filter((c) => c.id_promotion === selectedPromotion.value)
+    // IMPORTANT : On enrichit chaque cours avec le champ `credit`
     .map((c) => ({
       ...c,
       titre_cours: c.titre_cours,
       finalGrade: currentStudent.value.notes[c.id]?.finalGrade || 0,
+      credit: c.credit || 0, // Assurez-vous que le store `courses` fournit bien ce champ
     }));
+
   currentCourseIndex.value = 0;
   loadCurrentCourseDetails();
   showModal.value = true;
 };
 
-// Ferme le modal sans tout réinitialiser
+// Ferme le modal sans tout réinitialiser (inchangé)
 const closeModal = () => {
   showModal.value = false;
   currentStudent.value = null;
@@ -647,12 +643,16 @@ const prevCourse = () => {
   }
 };
 
+// --- LOGIQUE CRITIQUE DE SAUVEGARDE ET CALCUL FINAL (Mise à jour) ---
+
 const saveStudentResults = async () => {
   saveCurrentCourseNotes();
+
   const historiqueCours = [];
-  let totalPourcentageAnnuel = 0;
-  let countedCourses = 0;
-  const totalCourses = coursesForStudent.value.length;
+  let sumWeightedGrade = 0;
+  let totalCreditCounted = 0;
+  let totalCreditValides = 0;
+  let totalCreditAllCourses = 0; // Total des crédits de tous les cours
 
   for (const course of coursesForStudent.value) {
     const notesStructure = currentStudent.value.notes[course.id] || {};
@@ -661,11 +661,12 @@ const saveStudentResults = async () => {
     const allCourseAssocs = associationTypes.value.filter((a) => a.id_cours === course.id);
     const evaluations = [];
 
+    // Préparation des évaluations
     for (const assoc of allCourseAssocs) {
       const assocId = assoc.id;
       const note = notesStructure[assocId];
       if (typeof note === "number" && !isNaN(note)) {
-        shouldSendResult = true;
+        shouldSendResult = true; // Si au moins une note est entrée
         const typeDetail = types.value.find((t) => t.id === assoc.id_type_evaluation);
         evaluations.push({
           id: assoc.id,
@@ -675,34 +676,67 @@ const saveStudentResults = async () => {
       }
     }
 
+    // On compte le crédit du cours dans le total des crédits de la promotion (qu'il soit noté ou non)
+    totalCreditAllCourses += course.credit;
+
+    // Si le cours a été noté (shouldSendResult est True), on le prend en compte pour les calculs finaux
     if (shouldSendResult) {
-      totalPourcentageAnnuel += courseFinalGrade;
-      countedCourses++;
+      const isCourseValidated = courseFinalGrade >= 50;
+      const courseCredit = course.credit || 0;
+
+      // 1. Calcul de la moyenne pondérée
+      sumWeightedGrade += courseFinalGrade * courseCredit;
+      totalCreditCounted += courseCredit;
+
+      // 2. Crédits validés
+      if (isCourseValidated) {
+        totalCreditValides += courseCredit;
+      }
+
+      // 3. Construction de l'historique complet pour le backend
       historiqueCours.push({
         id_cours: course.id,
         titre_cours: course.titre_cours,
+        credit: courseCredit, // NOUVEAU: Credit du cours
         note_cours_pct: courseFinalGrade.toFixed(2),
+        validate: isCourseValidated, // NOUVEAU: Validation du cours (>= 50%)
         type_evaluation: evaluations,
       });
     }
   }
 
-  if (totalCourses === 0 || countedCourses === 0) {
-    alert("Aucun cours trouvé ou noté pour cette promotion.");
+  if (coursesForStudent.value.length === 0 || totalCreditCounted === 0) {
+    alert("Aucun cours trouvé ou noté avec crédits pour cette promotion.");
     closeModal();
     return;
   }
 
-  const finalPourcentage = totalPourcentageAnnuel / countedCourses;
-  const maxNoteAnnuelle = 600;
+  // Calcul du pourcentage final PONDÉRÉ
+  const finalPourcentage = totalCreditCounted > 0 ? (sumWeightedGrade / totalCreditCounted) : 0;
+
+  // Validation Globale: Vrai si l'étudiant a validé au moins la moitié des crédits TOTAUX
+  const totalCreditRequired = totalCreditAllCourses / 2;
+  const validationGlobale = totalCreditValides >= totalCreditRequired;
+
+  // Préparation du résultat final à envoyer au backend
+  const maxNoteAnnuelle = 600; // La base sur 600 reste la même
   const finalNote600 = (finalPourcentage / 100) * maxNoteAnnuelle;
 
   const resultatFinal = {
     id_etudiant: currentStudent.value.id,
     note_finale_600: finalNote600.toFixed(2),
     pourcentage_final: finalPourcentage.toFixed(2),
-    historique_complet: JSON.stringify(historiqueCours),
+    credits_valides: totalCreditValides.toFixed(0), // NOUVEAU
+    validation_globale: validationGlobale, // NOUVEAU
+    historique_complet: JSON.stringify(historiqueCours), // NOUVEAU FORMAT
   };
+
+  // Mise à jour locale pour le rafraîchissement
+  currentStudent.value.finalGrade = finalPourcentage;
+  currentStudent.value.credits_valides = totalCreditValides;
+  currentStudent.value.validation_globale = validationGlobale;
+
+  console.log(resultatFinal);
 
   try {
     await resultatStore.saveResultat(resultatFinal);
@@ -711,27 +745,32 @@ const saveStudentResults = async () => {
     );
     if (studentIndex !== -1) {
       studentsWithResults.value[studentIndex].finalGrade = finalPourcentage;
+      studentsWithResults.value[studentIndex].credits_valides = totalCreditValides;
+      studentsWithResults.value[studentIndex].validation_globale = validationGlobale;
     }
     // Mise à jour de la liste et déclenchement du watch pour enregistrer les progrès globaux
     await onPromotionChange();
     closeModal();
   } catch (error) {
     console.error("Error save result:", error);
-    alert("❌ Error when you save result.");
+    alert(" Error when you save result.");
   }
 };
+
+
 
 const {fetchAll : fetchAllFaculties} = facultyStore
 const {fetchPromotions} = promotionStore
 const {fetchAllCourses, fetchAssociations} = courseStore
 const {fetchAllStudents} = studentStore
+const {fetchDepartements} = departementStore
 const {fetchAllTypes, fetchAssociationTypes} = typeStore
 const {fetchUsers} = userStore
 
 onMounted(async () => {
   await Promise.all([
     fetchAllFaculties(),
-    departementStore.fetchAllDepartements(),
+    fetchDepartements(),
     fetchPromotions(),
     fetchAllResult(),
     fetchAllCourses(),
