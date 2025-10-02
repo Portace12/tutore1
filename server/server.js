@@ -14,6 +14,7 @@ import courseRoutes from './Routes/courseRoute.js'
 import typeRoutes from './Routes/typeRoute.js'
 import resultatRoutes from './Routes/resultatRoute.js';
 import adminRoutes from './Routes/adminRoute.js'
+import authRoutes from './Routes/authRoute.js'
 
 const app = express()
 app.use(express.json())
@@ -34,6 +35,7 @@ app.use('/api/course', courseRoutes)
 app.use('/api/type', typeRoutes)
 app.use('/api/resultats', resultatRoutes);
 app.use('/api/admin', adminRoutes)
+app.use('/api/auth', authRoutes)
 
 
 app.get('/', (req, res) => {

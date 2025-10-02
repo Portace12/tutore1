@@ -3,8 +3,17 @@
     :data-theme="currentTheme"
     class="antialiased min-h-screen bg-base-200 text-base-content font-inter"
   >
-    <div v-if="!$route.meta.hideLayout" class="flex h-screen">
+    <div v-if="!$route.meta.hideLayout && user.role === 'Admin'" class="flex h-screen">
       <AdminSideBar @toggle-theme="toggleTheme" />
+      <main class="flex-1 flex flex-col overflow-hidden">
+        <div class="p-5 overflow-y-auto flex-1">
+          <router-view />
+        </div>
+      </main>
+    </div>
+
+    <div v-else-if="!$route.meta.hideLayout && user.role === 'Student'">
+      <StudentNavbar @toggle-theme="toggleTheme" />
       <main class="flex-1 flex flex-col overflow-hidden">
         <div class="p-5 overflow-y-auto flex-1">
           <router-view />
@@ -20,6 +29,8 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import AdminSideBar from "./components/adminComponents/AdminSideBar.vue";
+import { getLocalStorageItem } from "../helpers";
+import StudentNavbar from "./components/studentComponent/StudentNavbar.vue";
 
 const currentTheme = ref("light");
 
@@ -28,6 +39,8 @@ const toggleTheme = () => {
   currentTheme.value = newTheme;
   localStorage.setItem("theme", newTheme);
 };
+
+const user = getLocalStorageItem("currentUser");
 
 onMounted(() => {
   const savedTheme = localStorage.getItem("theme");

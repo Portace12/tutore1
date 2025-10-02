@@ -22,7 +22,7 @@ export const sidebarContent = [
     icon: "mdi-book-open",
     link: "/course",
   },
-    {
+  {
     title: "Calculation",
     icon: "mdi-calculator",
     link: "/calculation",
@@ -32,8 +32,6 @@ export const sidebarContent = [
     icon: "mdi-bell",
     link: "/announce",
   },
-
-
 ]
 
 export const announceBar = [
@@ -48,3 +46,23 @@ export const announceBar = [
     component: Announce,
   },
 ];
+
+export const studentNavbar = [
+  {
+    title: "Home",
+    icon: "mdi-school",
+    link: "/student",
+  },
+  {
+    title: "Profil",
+    icon: "mdi-account-tie",
+    link: "/profile",
+  },
+  {
+    title: "Result",
+    icon: "mdi-town-hall",
+    link: "/result",
+  }
+]
+
+

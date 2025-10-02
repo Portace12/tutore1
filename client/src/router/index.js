@@ -13,6 +13,9 @@ import DepartementDetail from "@/pages/admin/DepartementDetail.vue";
 import PromotionDetail from "@/pages/admin/PromotionDetail.vue";
 import TypeManagement from "@/pages/admin/TypeManagement.vue";
 import AdminProfile from "@/pages/admin/AdminProfile.vue";
+import HomeStudent from "@/pages/student/HomeStudent.vue";
+import StudentProfil from "@/pages/student/StudentProfil.vue";
+import ResultPage from "@/pages/student/ResultPage.vue";
 
 const routes = [
   {
@@ -78,7 +81,7 @@ const routes = [
     name: "Course",
     meta: { requiresAuth: true },
   },
-    {
+  {
     path: "/admin/profile",
     component: AdminProfile,
     name: "AdminProfil",
@@ -108,6 +111,24 @@ const routes = [
   //   component: NotFound,
   //   meta: { hideLayout: true },
   // },
+  {
+    path: '/student',
+    component: HomeStudent,
+    name: "HomeStudent",
+    meta: { requiredAuth: true }
+  },
+  {
+    path: '/profile',
+    component: StudentProfil,
+    name: "StudentProfil",
+    meta: { requiredAuth: true }
+  },
+  {
+    path: '/result',
+    component: ResultPage,
+    name: "ResultPage",
+    meta: { requiredAuth: true }
+  }
 ];
 
 const router = createRouter({
