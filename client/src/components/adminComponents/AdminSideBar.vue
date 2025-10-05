@@ -40,17 +40,17 @@
       <ul class="flex flex-col gap-2">
         <li>
           <router-link
-            to="/"
+            to="/admin"
             :class="[
               'flex items-center rounded-box py-2 px-4 transition-colors duration-200 ease-in-out hover:bg-blue-600 active:bg-blue-500',
               {
-                'bg-blue-500 text-primary-content': isActive('/'),
+                'bg-blue-500 text-primary-content': isActive('/admin'),
                 'justify-center': !width,
                 'gap-2': width,
               },
             ]"
           >
-            <v-icon class="text-xl" :class="{ '': isActive('/') }"> mdi-home </v-icon>
+            <v-icon class="text-xl" :class="{ '': isActive('/admin') }"> mdi-home </v-icon>
             <p v-if="width">Home</p>
           </router-link>
         </li>
