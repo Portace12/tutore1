@@ -29,6 +29,7 @@ import NotFound from "@/pages/NotFound.vue";
 import { getLocalStorageItem } from "../../helpers";
 import { useAuthStore } from "@/stores/authStore";
 import { storeToRefs } from "pinia";
+import Notification from "@/pages/student/Notification.vue";
 
 
 
@@ -222,6 +223,12 @@ const routes = [
 
     meta: { requiresAuth: true, role: "Student" },
 
+  },
+  {
+    path: "/notification",
+    component: Notification,
+    name: "Notification",
+    meta: { requiresAuth: true, role: "Student" },
   },
 
 

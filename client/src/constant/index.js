@@ -62,7 +62,13 @@ export const studentNavbar = [
     title: "Result",
     icon: "mdi-town-hall",
     link: "/result",
-  }
+  },
+  {
+    title: "Notification",
+    icon: "mdi-bell",
+    link: "/notification",
+  },
+
 ]
 
 
