@@ -17,16 +17,16 @@ export const saveResultatController = async (req, res) => {
             data.validation_globale === undefined || // VÉRIFIER L'EXISTENCE
             data.credits_valides === undefined      // VÉRIFIER L'EXISTENCE
         ) {
-            return res.status(400).json({ message: "Données globales manquantes (id_etudiant, pourcentage, crédits ou validation)." });
+            return res.status(400).json({ message: "Data required." });
         }
         
         const result = await saveResultatModel(connection, data);
         res.status(200).json({ 
-            message: `Résultat global ${result.updated ? 'mis à jour' : 'enregistré'} avec succès.`,
+            message: `Global result ${result.updated ? 'updated' : 'save'} successfulyy.`,
             data: result
         });
     } catch (error) {
-        console.error("Erreur lors de l'enregistrement global:", error);
+        console.error("Error to save result:", error);
         res.status(500).json({ error: error.message });
     } finally {
         connection.release();
@@ -42,7 +42,7 @@ export const getResultatsByEtudiantController = async (req, res) => {
         const resultat = await getResultatsByEtudiantModel(connection, id_etudiant); 
         
         if (!resultat) {
-            return res.status(404).json({ message: "Aucun résultat global trouvé pour cet étudiant." });
+            return res.status(404).json({ message: "Result not found for this student." });
         }
         
         // Assurez-vous que le champ JSON est parsé avant d'être envoyé au front-end
@@ -52,7 +52,7 @@ export const getResultatsByEtudiantController = async (req, res) => {
 
         res.status(200).json(resultat);
     } catch (error) {
-        console.error("Erreur lors de la récupération globale:", error);
+        console.error("Error to fetch results:", error);
         res.status(500).json({ error: error.message });
     } finally {
         connection.release();
