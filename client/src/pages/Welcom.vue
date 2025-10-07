@@ -6,7 +6,7 @@
     >
       <div class="hero-content flex-col lg:flex-row-reverse">
         <img
-          src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=600&q=80"
+          :src="pic"
           class="max-w-sm rounded-lg shadow-2xl"
           alt="Student"
         />
@@ -40,4 +40,6 @@
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+import pic from '../../public/Gq6jHw4XMAAHRAI.jpeg'
+</script>

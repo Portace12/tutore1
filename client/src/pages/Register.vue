@@ -183,6 +183,10 @@
             <button type="submit" class="btn btn-primary w-full">Submit</button>
           </div>
         </form>
+        <p class="mt-4 font-bold flex items-center justify-center">
+          Have you an account ?
+          <router-link to="/login" class="text-blue-500">Login</router-link>
+        </p>
       </div>
 
       <!-- RIGHT : Branding -->

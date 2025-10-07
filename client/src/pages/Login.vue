@@ -44,6 +44,7 @@
               Log in
             </button>
           </form>
+          <p class="mt-4 font-bold">Don't you have an account ? <router-link to="/register" class="text-blue-500">Register</router-link></p>
         </div>
       </div>
       <!-- RIGHT PART -->

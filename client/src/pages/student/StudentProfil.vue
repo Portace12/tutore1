@@ -1,18 +1,18 @@
 <template>
   <div class="p-6 sm:p-10 max-w-5xl mx-auto">
+    <h1 class="text-4xl font-extrabold mb-8 text-center">Student Profile</h1>
 
-    <h1 class="text-4xl font-extrabold mb-8 text-center">
-      Student Profile
-    </h1>
-
-    <div class="card w-full bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 rounded-2xl mb-8 border border-base-300">
+    <div
+      class="card w-full bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 rounded-2xl mb-8 border border-base-300"
+    >
       <div class="card-body p-8 sm:p-12">
         <div class="flex flex-col md:flex-row items-center gap-8">
-
           <div class="avatar online">
-            <div class="w-36 md:w-40 rounded-full ring ring-primary ring-offset-base-100 ring-offset-4">
+            <div
+              class="w-36 md:w-40 rounded-full ring ring-primary ring-offset-base-100 ring-offset-4 transition hover:scale-105"
+            >
               <img
-                :src="`${server}/${user.student_photo_url}`"
+                :src="`${server}/${user?.student_photo_url}`"
                 :alt="`Photo of ${user.student_nom}`"
                 class="object-cover w-full h-full"
               />
@@ -37,8 +37,9 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-      <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 rounded-2xl border border-base-300">
+      <div
+        class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 rounded-2xl border border-base-300"
+      >
         <div class="card-body">
           <h3 class="card-title text-2xl border-b pb-3 mb-4 text-secondary">
             <i class="i-mdi-account-details-outline w-6 h-6 mr-2"></i>
@@ -62,7 +63,9 @@
         </div>
       </div>
 
-      <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 rounded-2xl border border-base-300">
+      <div
+        class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 rounded-2xl border border-base-300"
+      >
         <div class="card-body">
           <h3 class="card-title text-2xl border-b pb-3 mb-4 text-info">
             <i class="i-mdi-school-outline w-6 h-6 mr-2"></i>
@@ -93,15 +96,13 @@
           </ul>
         </div>
       </div>
-
     </div>
-
   </div>
 </template>
 
 <script setup>
 import { useAuthStore } from "@/stores/authStore";
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import useDepartementStore from "@/stores/departementStore";
 import { useFacultyStore } from "@/stores/facultyStore";
@@ -116,6 +117,10 @@ const { user } = storeToRefs(authStore);
 const { departements } = storeToRefs(departementStore);
 const { faculties } = storeToRefs(facultyStore);
 const { promotions } = storeToRefs(promotionStore);
+
+const {fetchDepartements} = departementStore
+const {fetchAll} = facultyStore
+const {fetchPromotions} = promotionStore
 
 const server = "http://localhost:4000";
 
@@ -140,5 +145,9 @@ const anniv = computed(() => {
   });
 });
 
-
+onMounted(async()=>{
+  await fetchAll()
+  await fetchDepartements()
+  await fetchPromotions()
+})
 </script>

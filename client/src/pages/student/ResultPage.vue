@@ -103,7 +103,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import { useAuthStore } from "@/stores/authStore";
 import { useResultatStore } from "@/stores/resultatStore";
 import { useCourseStore } from "@/stores/courseStore";
@@ -119,6 +119,10 @@ const { resultat } = storeToRefs(resultStore);
 const { user } = storeToRefs(authStore);
 const { associations, courses } = storeToRefs(courseStore);
 const { professors } = storeToRefs(professorStore);
+
+const {fetchAllResult} = resultStore
+const {fetchAllCourses, fetchAssociations} = courseStore
+const {fetchAll} = professorStore
 
 // === RESULT GLOBAL ===
 const resultInfo = computed(() => {
@@ -142,4 +146,13 @@ const detailedResults = computed(() => {
     };
   });
 });
+
+
+
+onMounted(async()=>{
+  await fetchAll()
+  await fetchAllCourses()
+  await fetchAssociations()
+  await fetchAllResult()
+})
 </script>

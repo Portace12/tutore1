@@ -56,7 +56,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useCourseStore } from "@/stores/courseStore";
 import { useResultatStore } from "@/stores/resultatStore";
 import { storeToRefs } from "pinia";
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 
 const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
@@ -64,6 +64,9 @@ const courseStore = useCourseStore();
 const { courses } = storeToRefs(courseStore);
 const resultStore = useResultatStore();
 const { resultat } = storeToRefs(resultStore);
+
+const {fetchAllCourses, fetchAssociations} = courseStore
+const {fetchAllResult} = resultStore
 
 const resultAssociate = computed(() => {
   if (!user.value) {
@@ -94,4 +97,10 @@ const courseAssociate = computed(() => {
 
   return rs;
 });
+
+onMounted(async()=>{
+  await fetchAllCourses()
+  await fetchAllResult()
+  await fetchAssociations()
+})
 </script>

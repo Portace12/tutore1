@@ -6,4 +6,5 @@
 
 <script setup>
 import AdminDashbord from '@/components/adminComponents/AdminDashbord.vue';
+
 </script>
